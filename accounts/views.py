@@ -3,6 +3,10 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import CustomerRegistrationForm, CustomerProfileForm
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.urls import reverse_lazy
+from .models import Department
 
 def register_view(request):
     if request.method == 'POST':
@@ -11,8 +15,7 @@ def register_view(request):
             user = form.save()
             login(request, user)
             messages.success(request, 'Account created successfully!')
-            # In register_view
-            return redirect('core:DashboardView')  # Instead of 'products:product_list'
+            return redirect('core:DashboardView') 
     else:
         form = CustomerRegistrationForm()
     return render(request, 'accounts/register.html', {'form': form})
@@ -25,8 +28,7 @@ def login_view(request):
         if user is not None:
             login(request, user)
             messages.success(request, 'Logged in successfully!')
-            # In login_view
-            return redirect('core:DashboardView')  # Instead of 'products:product_list'
+            return redirect('core:DashboardView') 
         else:
             messages.error(request, 'Invalid username or password.')
     return render(request, 'accounts/login.html')
@@ -34,8 +36,7 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     messages.success(request, 'Logged out successfully!')
-    # In logout_view
-    return redirect('core:DashboardView')  # Instead of 'products:product_list'
+    return redirect('core:DashboardView')  
 
 @login_required
 def profile_view(request):
@@ -54,11 +55,7 @@ def edit_profile_view(request):
     return render(request, 'accounts/edit_profile.html', {'form': form})
 
 
-# Add these imports and views to your accounts/views.py
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.urls import reverse_lazy
-from .models import Department
+
 
 class DepartmentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = Department
