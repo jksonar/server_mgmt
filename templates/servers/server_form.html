@@ -62,7 +62,14 @@
                             <div class="col-md-6 mb-3">
                                 <label for="id_department" class="form-label">Department</label>
                                 {{ form.department.errors }}
-                                <input type="text" name="department" id="id_department" class="form-control {% if form.department.errors %}is-invalid{% endif %}" value="{{ form.department.value|default:'' }}">
+                                <select name="department" id="id_department" class="form-select {% if form.department.errors %}is-invalid{% endif %}">
+                                    <option value="" {% if not form.department.value %}selected{% endif %}>---------</option>
+                                    {% for department in form.department.field.queryset %}
+                                        <option value="{{ department.id }}" {% if form.department.value|stringformat:'i' == department.id|stringformat:'i' %}selected{% endif %}>
+                                            {{ department.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
                         
