@@ -1,5 +1,5 @@
 from django import forms
-from .models import Server, ServerUpdate, Service, AuditLog
+from .models import Server, ServerUpdate, Service, AuditLog, HyperLink
 
 class ServerForm(forms.ModelForm):
     class Meta:
@@ -16,3 +16,7 @@ class ServiceForm(forms.ModelForm):
         model = Service 
         fields = ['server', 'name', 'port', 'status', 'last_restart']
 
+class HuperLinkForm(forms.ModelForm):
+    class Meta:
+        model = HyperLink
+        fields = ['servers', 'url', 'is_enabled']

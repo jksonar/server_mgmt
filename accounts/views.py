@@ -54,9 +54,6 @@ def edit_profile_view(request):
         form = CustomerProfileForm(instance=request.user)
     return render(request, 'accounts/edit_profile.html', {'form': form})
 
-
-
-
 class DepartmentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = Department
     template_name = 'accounts/department_list.html'

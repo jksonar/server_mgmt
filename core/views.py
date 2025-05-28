@@ -1,8 +1,8 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from .models import Server, ServerUpdate, Service
+from .models import Server, ServerUpdate, Service, HyperLink
 
 # 🔐 Mixin to filter servers by user department
 class ServerAccessMixin(LoginRequiredMixin):
@@ -49,6 +49,7 @@ class ServerDetailView(ServerAccessMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context['updates'] = self.object.updates.all()
         context['services'] = self.object.services.all()
+        context['hyperlinks'] = self.object.HyperLink.all()  # Add this line
         return context
 
 
@@ -176,3 +177,74 @@ class ServiceCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                 form.add_error('server', 'You can only add services to servers in your departments')
                 return self.form_invalid(form)
         return super().form_valid(form)
+
+
+class HyperLinkCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = HyperLink
+    fields = ['servers', 'url', 'is_enabled']
+    template_name = "servers/hyperlink_form.html"
+    success_url = reverse_lazy('core:server-list')
+    
+    def test_func(self):
+        # If server_id is in kwargs, check if user has access to this server
+        if 'server_id' in self.kwargs:
+            server = get_object_or_404(Server, id=self.kwargs['server_id'])
+            return self.request.user.is_superuser or server.department in self.request.user.departments.all()
+        return True  # Will be filtered in get_form
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Limit server choices to user's accessible servers
+        if not self.request.user.is_superuser:
+            form.fields['servers'].queryset = Server.objects.filter(
+                department__in=self.request.user.departments.all()
+            ).distinct()
+        
+        # If server_id is in kwargs, pre-select the server
+        if 'server_id' in self.kwargs:
+            form.fields['servers'].initial = self.kwargs['server_id']
+            form.fields['servers'].widget.attrs['readonly'] = True
+            
+        return form
+
+    def form_valid(self, form):
+        # Double-check server access permission
+        if not self.request.user.is_superuser:
+            if form.instance.servers.department not in self.request.user.departments.all():
+                form.add_error('servers', 'You can only add URLs to servers in your departments')
+                return self.form_invalid(form)
+        return super().form_valid(form)
+
+
+class HyperLinkDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = HyperLink
+    template_name = "servers/hyperlink_detail.html"
+    context_object_name = "hyperlink"
+    
+    def test_func(self):
+        hyperlink = self.get_object()
+        # Allow access if user is superuser or server's department is in user's departments
+        return self.request.user.is_superuser or hyperlink.servers.department in self.request.user.departments.all()
+
+
+class HyperLinkUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = HyperLink
+    fields = ['url', 'is_enabled']
+    template_name = "servers/hyperlink_form.html"
+    success_url = reverse_lazy('core:server-list')
+    
+    def test_func(self):
+        hyperlink = self.get_object()
+        # Allow access if user is superuser or server's department is in user's departments
+        return self.request.user.is_superuser or hyperlink.servers.department in self.request.user.departments.all()
+
+
+class HyperLinkDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = HyperLink
+    template_name = "servers/hyperlink_confirm_delete.html"
+    success_url = reverse_lazy('core:server-list')
+    
+    def test_func(self):
+        hyperlink = self.get_object()
+        # Allow access if user is superuser or server's department is in user's departments
+        return self.request.user.is_superuser or hyperlink.servers.department in self.request.user.departments.all()

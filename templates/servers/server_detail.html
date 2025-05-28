@@ -159,5 +159,49 @@
             </div>
         </div>
     </div>
+    <!-- Add this section to your server_detail.html template -->
+    
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5>URLs</h5>
+            <a href="{% url 'core:server-urls' %}?server_id={{ server.id }}" class="btn btn-sm btn-primary">Add URL</a>
+        </div>
+        <div class="card-body">
+            {% if server.HyperLink.all %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hyperlink in server.HyperLink.all %}
+                        <tr>
+                            <td><a href="{{ hyperlink.url }}" target="_blank">{{ hyperlink.url }}</a></td>
+                            <td>
+                                {% if hyperlink.is_enabled %}
+                                <span class="badge bg-success">Enabled</span>
+                                {% else %}
+                                <span class="badge bg-danger">Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'core:server-urls-detail' hyperlink.id %}" class="btn btn-sm btn-outline-info">View</a>
+                                <a href="{% url 'core:server-urls-update' hyperlink.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{% url 'core:server-urls-delete' hyperlink.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">No URLs found for this server.</div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

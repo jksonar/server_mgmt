@@ -1,4 +1,3 @@
-# from django.contrib.auth.models import User, Group
 from django.db import models
 from django.conf import settings
 from accounts.models import Department
@@ -51,3 +50,13 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return f"{self.timestamp} - {self.user} - {self.action}"
+
+class HyperLink(models.Model):
+    servers = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='HyperLink')
+    url = models.CharField(max_length=100)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='HyperLink_created_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_enabled = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.url} on {self.servers.name}"

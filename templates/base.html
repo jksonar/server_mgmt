@@ -30,6 +30,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'core:server-list' %}">Servers</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:server-urls' %}">Servers Urls</a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
@@ -38,7 +41,10 @@
                                 {{ user.username }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
+                                {% if user.is_superuse %}
                                 <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin</a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Profile</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Logout</a></li>
                             </ul>
@@ -62,6 +68,10 @@
                     <a href="{% url 'core:server-list' %}" class="list-group-item list-group-item-action">Servers</a>
                     {% if user.is_superuser %}
                     <a href="{% url 'core:server-create' %}" class="list-group-item list-group-item-action">Add Server</a>
+                    {% endif %}
+                    <a href="{% url 'core:server-urls' %}" class="list-group-item list-group-item-action">Servers Urls</a>
+                    {% if user.is_superuser %}
+                    <a href="{% url 'core:server-urls' %}" class="list-group-item list-group-item-action">Add Server Url</a>
                     {% endif %}
                     <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">My Profile</a>
                 </div>
