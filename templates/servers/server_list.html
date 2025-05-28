@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Servers - Server Management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Servers</h1>
+        {% if user.is_superuser %}
+        <a href="{% url 'core:server-create' %}" class="btn btn-primary">Add Server</a>
+        {% endif %}
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>IP Address</th>
+                            <th>OS</th>
+                            <th>Location</th>
+                            <th>Department</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for server in servers %}
+                        <tr>
+                            <td>{{ server.name }}</td>
+                            <td>{{ server.ip_address }}</td>
+                            <td>{{ server.os }}</td>
+                            <td>{{ server.location }}</td>
+                            <td>{{ server.department }}</td>
+                            <td>
+                                <a href="{% url 'core:server-detail' server.pk %}" class="btn btn-sm btn-info">View</a>
+                                {% if user.is_superuser %}
+                                <a href="{% url 'core:server-update' server.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No servers available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

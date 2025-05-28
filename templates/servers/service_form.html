@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Service - Server Management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Add Service</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_server" class="form-label">Server</label>
+                            {{ form.server.errors }}
+                            {{ form.server }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label">Service Name</label>
+                            {{ form.name.errors }}
+                            <input type="text" name="name" id="id_name" class="form-control {% if form.name.errors %}is-invalid{% endif %}" value="{{ form.name.value|default:'' }}" required>
+                            <div class="form-text">E.g., Apache, MySQL, SSH</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_port" class="form-label">Port</label>
+                            {{ form.port.errors }}
+                            <input type="number" name="port" id="id_port" class="form-control {% if form.port.errors %}is-invalid{% endif %}" value="{{ form.port.value|default:'' }}">
+                            <div class="form-text">Optional: Service port number</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_status" class="form-label">Status</label>
+                            {{ form.status.errors }}
+                            <select name="status" id="id_status" class="form-select {% if form.status.errors %}is-invalid{% endif %}">
+                                <option value="running" {% if form.status.value == 'running' %}selected{% endif %}>Running</option>
+                                <option value="stopped" {% if form.status.value == 'stopped' %}selected{% endif %}>Stopped</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_last_restart" class="form-label">Last Restart</label>
+                            {{ form.last_restart.errors }}
+                            <input type="datetime-local" name="last_restart" id="id_last_restart" class="form-control {% if form.last_restart.errors %}is-invalid{% endif %}" value="{{ form.last_restart.value|date:'Y-m-d\TH:i' }}">
+                            <div class="form-text">Optional: When was the service last restarted</div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'core:server-list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

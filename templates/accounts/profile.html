@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - Server Management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4>My Profile</h4>
+                    <a href="{% url 'accounts:edit_profile' %}" class="btn btn-primary btn-sm">Edit Profile</a>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Username:</div>
+                        <div class="col-md-8">{{ user.username }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Name:</div>
+                        <div class="col-md-8">{{ user.first_name }} {{ user.last_name }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Email:</div>
+                        <div class="col-md-8">{{ user.email }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Department:</div>
+                        <div class="col-md-8">{{ user.department|default:"Not specified" }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Date Joined:</div>
+                        <div class="col-md-8">{{ user.date_joined|date:"F j, Y" }}</div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Last Login:</div>
+                        <div class="col-md-8">{{ user.last_login|date:"F j, Y H:i" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ server.name }} - Server Management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ server.name }}</h1>
+        <div>
+            {% if user.is_superuser %}
+            <a href="{% url 'core:server-update' server.pk %}" class="btn btn-warning">Edit Server</a>
+            {% endif %}
+            <a href="{% url 'core:server-list' %}" class="btn btn-secondary">Back to List</a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Server Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th style="width: 30%">IP Address:</th>
+                            <td>{{ server.ip_address }}</td>
+                        </tr>
+                        <tr>
+                            <th>Operating System:</th>
+                            <td>{{ server.os }}</td>
+                        </tr>
+                        <tr>
+                            <th>CPU:</th>
+                            <td>{{ server.cpu }}</td>
+                        </tr>
+                        <tr>
+                            <th>Memory:</th>
+                            <td>{{ server.memory }}</td>
+                        </tr>
+                        <tr>
+                            <th>Disk:</th>
+                            <td>{{ server.disk }}</td>
+                        </tr>
+                        <tr>
+                            <th>Location:</th>
+                            <td>{{ server.location }}</td>
+                        </tr>
+                        <tr>
+                            <th>Department:</th>
+                            <td>{{ server.department }}</td>
+                        </tr>
+                        <tr>
+                            <th>Owner:</th>
+                            <td>{{ server.owner|default:"Not assigned" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Access Groups:</th>
+                            <td>
+                                {% for group in server.groups.all %}
+                                    <span class="badge bg-primary">{{ group.name }}</span>
+                                {% empty %}
+                                    <span class="text-muted">No groups assigned</span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Services</h5>
+                    <a href="{% url 'core:service-create' %}" class="btn btn-sm btn-primary">Add Service</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Port</th>
+                                    <th>Status</th>
+                                    <th>Last Restart</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for service in services %}
+                                <tr>
+                                    <td>{{ service.name }}</td>
+                                    <td>{{ service.port|default:"-" }}</td>
+                                    <td>
+                                        {% if service.status == 'running' %}
+                                            <span class="badge bg-success">Running</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Stopped</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ service.last_restart|default:"-" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No services available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Update History</h5>
+                    <a href="{% url 'core:update-create' %}" class="btn btn-sm btn-primary">Add Update</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Updated By</th>
+                                    <th>Notes</th>
+                                    <th>Attachment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for update in updates %}
+                                <tr>
+                                    <td>{{ update.update_time|date:"Y-m-d H:i" }}</td>
+                                    <td>{{ update.update_type }}</td>
+                                    <td>{{ update.updated_by.username }}</td>
+                                    <td>{{ update.notes|truncatechars:50 }}</td>
+                                    <td>
+                                        {% if update.attachment %}
+                                            <a href="{{ update.attachment.url }}" class="btn btn-sm btn-info">Download</a>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No updates available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

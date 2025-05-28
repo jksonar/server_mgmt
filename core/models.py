@@ -1,0 +1,53 @@
+# from django.contrib.auth.models import User, Group
+from django.db import models
+from django.conf import settings
+from accounts.models import Department
+
+class Server(models.Model):
+    name = models.CharField(max_length=100)
+    ip_address = models.GenericIPAddressField()
+    os = models.CharField(max_length=100)
+    cpu = models.CharField(max_length=100, blank=True)
+    memory = models.CharField(max_length=50, blank=True)
+    disk = models.CharField(max_length=100, blank=True)
+    location = models.CharField(max_length=100, blank=True)
+    # Replace department field with ForeignKey to Department
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, related_name='servers')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='owned_servers')
+    # Remove the commented out groups field as we'll use departments instead
+
+    def __str__(self):
+        return f"{self.name} ({self.ip_address})"
+
+
+class ServerUpdate(models.Model):
+    server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='updates')
+    update_type = models.CharField(max_length=100)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='updates_performed')
+    update_time = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+    attachment = models.FileField(upload_to='update_logs/', blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.server.name} - {self.update_type} at {self.update_time}"
+
+
+class Service(models.Model):
+    server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='services')
+    name = models.CharField(max_length=100)
+    port = models.PositiveIntegerField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=[('running', 'Running'), ('stopped', 'Stopped')])
+    last_restart = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.name} on {self.server.name}"
+
+
+class AuditLog(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    action = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    details = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.timestamp} - {self.user} - {self.action}"
