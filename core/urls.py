@@ -15,4 +15,5 @@ urlpatterns = [
     path('servers/urls/<int:pk>/', views.HyperLinkDetailView.as_view(), name='server-urls-detail'),
     path('servers/urls/<int:pk>/update/', views.HyperLinkUpdateView.as_view(), name='server-urls-update'),
     path('servers/urls/<int:pk>/delete/', views.HyperLinkDeleteView.as_view(), name='server-urls-delete'),
+    path('servers/urls/all/', views.HyperLinkListView.as_view(), name='server-urls-list'),  # Add this line
 ]

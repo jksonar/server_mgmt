@@ -68,11 +68,9 @@
                     <a href="{% url 'core:server-list' %}" class="list-group-item list-group-item-action">Servers</a>
                     {% if user.is_superuser %}
                     <a href="{% url 'core:server-create' %}" class="list-group-item list-group-item-action">Add Server</a>
-                    {% endif %}
-                    <a href="{% url 'core:server-urls' %}" class="list-group-item list-group-item-action">Servers Urls</a>
-                    {% if user.is_superuser %}
                     <a href="{% url 'core:server-urls' %}" class="list-group-item list-group-item-action">Add Server Url</a>
                     {% endif %}
+                    <a href="{% url 'core:server-urls-list' %}" class="list-group-item list-group-item-action">All URLs</a>
                     <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">My Profile</a>
                 </div>
             </div>

@@ -248,3 +248,30 @@ class HyperLinkDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         hyperlink = self.get_object()
         # Allow access if user is superuser or server's department is in user's departments
         return self.request.user.is_superuser or hyperlink.servers.department in self.request.user.departments.all()
+
+class HyperLinkListView(LoginRequiredMixin, ListView):
+    model = HyperLink
+    template_name = "servers/hyperlink_list.html"
+    context_object_name = "hyperlinks"
+    
+    def get_queryset(self):
+        # Get all hyperlinks the user has access to
+        if self.request.user.is_superuser:
+            return HyperLink.objects.all()
+        # Filter hyperlinks by user's departments
+        return HyperLink.objects.filter(
+            servers__department__in=self.request.user.departments.all()
+        ).distinct()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Group hyperlinks by server
+        servers_with_links = {}
+        
+        for hyperlink in self.get_queryset():
+            if hyperlink.servers not in servers_with_links:
+                servers_with_links[hyperlink.servers] = []
+            servers_with_links[hyperlink.servers].append(hyperlink)
+        
+        context['servers_with_links'] = servers_with_links
+        return context
