@@ -60,3 +60,34 @@ class HyperLink(models.Model):
 
     def __str__(self):
         return f"{self.url} on {self.servers.name}"
+
+# Host-VM Models
+class Host(models.Model):
+    hostname = models.CharField(max_length=100)
+    ip_address = models.GenericIPAddressField()
+    status = models.CharField(max_length=20, choices=[('online', 'Online'), ('offline', 'Offline')])
+    total_cpu = models.CharField(max_length=100, blank=True)
+    total_ram = models.CharField(max_length=50, blank=True)
+    hyperv_version = models.CharField(max_length=50, blank=True)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, related_name='hosts')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='owned_hosts')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.hostname} ({self.ip_address})"
+
+class VirtualMachine(models.Model):
+    host = models.ForeignKey(Host, on_delete=models.CASCADE, related_name='virtual_machines')
+    name = models.CharField(max_length=100)
+    vm_id = models.CharField(max_length=100, blank=True)
+    guest_os = models.CharField(max_length=100)
+    status = models.CharField(max_length=20, choices=[('running', 'Running'), ('stopped', 'Stopped')])
+    assigned_cpu = models.CharField(max_length=100, blank=True)
+    assigned_ram = models.CharField(max_length=50, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} on {self.host.hostname}"

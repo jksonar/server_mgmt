@@ -2,7 +2,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from .models import Server, ServerUpdate, Service, HyperLink
+from .models import Server, ServerUpdate, Service, HyperLink, Host, VirtualMachine
+from .forms import HostForm, VirtualMachineForm
 
 # 🔐 Mixin to filter servers by user department
 class ServerAccessMixin(LoginRequiredMixin):
@@ -275,3 +276,172 @@ class HyperLinkListView(LoginRequiredMixin, ListView):
         
         context['servers_with_links'] = servers_with_links
         return context
+
+# 🔐 Mixin to filter hosts by user department
+class HostAccessMixin(LoginRequiredMixin):
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Host.objects.all()
+        # Filter hosts by user's departments
+        return Host.objects.filter(department__in=self.request.user.departments.all()).distinct()
+
+# 🖥️ Host List with VMs
+class HostVMListView(HostAccessMixin, ListView):
+    model = Host
+    template_name = "servers/host_vm_list.html"
+    context_object_name = "hosts"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Include VMs for each host
+        hosts_with_vms = {}
+        
+        for host in self.get_queryset():
+            hosts_with_vms[host] = host.virtual_machines.all()
+        
+        context['hosts_with_vms'] = hosts_with_vms
+        return context
+
+# 🔍 Host Detail
+class HostDetailView(HostAccessMixin, DetailView):
+    model = Host
+    template_name = "servers/host_detail.html"
+    context_object_name = "host"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['virtual_machines'] = self.object.virtual_machines.all()
+        return context
+
+# ➕ Add Host
+class HostCreateView(LoginRequiredMixin, CreateView):
+    model = Host
+    form_class = HostForm
+    template_name = "servers/host_form.html"
+    success_url = reverse_lazy('core:host-vm-list')
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Limit department choices to user's departments unless superuser
+        if not self.request.user.is_superuser:
+            form.fields['department'].queryset = self.request.user.departments.all()
+        return form
+
+    def form_valid(self, form):
+        # Ensure user can only create hosts for their departments
+        if not self.request.user.is_superuser:
+            if form.instance.department not in self.request.user.departments.all():
+                form.add_error('department', 'You can only create hosts for your departments')
+                return self.form_invalid(form)
+        return super().form_valid(form)
+
+# ✏️ Update Host
+class HostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Host
+    form_class = HostForm
+    template_name = "servers/host_form.html"
+    success_url = reverse_lazy('core:host-vm-list')
+
+    def test_func(self):
+        # Allow access if user is superuser or host's department is in user's departments
+        host = self.get_object()
+        return self.request.user.is_superuser or host.department in self.request.user.departments.all()
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Limit department choices to user's departments unless superuser
+        if not self.request.user.is_superuser:
+            form.fields['department'].queryset = self.request.user.departments.all()
+        return form
+
+    def form_valid(self, form):
+        # Ensure user can only update hosts to their departments
+        if not self.request.user.is_superuser:
+            if form.instance.department not in self.request.user.departments.all():
+                form.add_error('department', 'You can only assign hosts to your departments')
+                return self.form_invalid(form)
+        return super().form_valid(form)
+
+# ➕ Add VM
+class VMCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = VirtualMachine
+    form_class = VirtualMachineForm
+    template_name = "servers/vm_form.html"
+    success_url = reverse_lazy('core:host-vm-list')
+
+    def test_func(self):
+        # If host_id is in kwargs, check if user has access to this host
+        if 'host_id' in self.kwargs:
+            host = get_object_or_404(Host, id=self.kwargs['host_id'])
+            return self.request.user.is_superuser or host.department in self.request.user.departments.all()
+        return True  # Will be filtered in get_form
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Limit host choices to user's accessible hosts
+        if not self.request.user.is_superuser:
+            form.fields['host'].queryset = Host.objects.filter(
+                department__in=self.request.user.departments.all()
+            ).distinct()
+        
+        # If host_id is in kwargs, pre-select the host
+        if 'host_id' in self.kwargs:
+            form.fields['host'].initial = self.kwargs['host_id']
+            form.fields['host'].widget.attrs['readonly'] = True
+            
+        return form
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add host to context if host_id is in kwargs
+        if 'host_id' in self.kwargs:
+            context['host'] = get_object_or_404(Host, id=self.kwargs['host_id'])
+        return context
+
+    def form_valid(self, form):
+        # Double-check host access permission
+        if not self.request.user.is_superuser:
+            if form.instance.host.department not in self.request.user.departments.all():
+                form.add_error('host', 'You can only add VMs to hosts in your departments')
+                return self.form_invalid(form)
+        return super().form_valid(form)
+
+# 🔍 VM Detail
+class VMDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = VirtualMachine
+    template_name = "servers/vm_detail.html"
+    context_object_name = "vm"
+    
+    def test_func(self):
+        vm = self.get_object()
+        # Allow access if user is superuser or host's department is in user's departments
+        return self.request.user.is_superuser or vm.host.department in self.request.user.departments.all()
+
+# ✏️ Update VM
+class VMUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = VirtualMachine
+    form_class = VirtualMachineForm
+    template_name = "servers/vm_form.html"
+    success_url = reverse_lazy('core:host-vm-list')
+
+    def test_func(self):
+        # Allow access if user is superuser or VM's host department is in user's departments
+        vm = self.get_object()
+        return self.request.user.is_superuser or vm.host.department in self.request.user.departments.all()
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Limit host choices to user's accessible hosts
+        if not self.request.user.is_superuser:
+            form.fields['host'].queryset = Host.objects.filter(
+                department__in=self.request.user.departments.all()
+            ).distinct()
+        return form
+
+    def form_valid(self, form):
+        # Double-check host access permission
+        if not self.request.user.is_superuser:
+            if form.instance.host.department not in self.request.user.departments.all():
+                form.add_error('host', 'You can only assign VMs to hosts in your departments')
+                return self.form_invalid(form)
+        return super().form_valid(form)

@@ -28,10 +28,19 @@
                         <a class="nav-link" href="{% url 'core:DashboardView' %}">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'core:server-list' %}">Servers</a>
+                        <a class="nav-link" href="{% url 'core:server-list' %}">
+                            <i class="fas fa-server"></i> Servers
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'core:server-urls' %}">Servers Urls</a>
+                        <a class="nav-link" href="{% url 'core:host-vm-list' %}">
+                            <i class="fas fa-network-wired"></i> Hosts & VMs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:server-list' %}">
+                            <i class="fas fa-link"></i> Server URLs
+                        </a>
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
@@ -66,8 +75,10 @@
                 <div class="list-group">
                     <a href="{% url 'core:DashboardView' %}" class="list-group-item list-group-item-action">Dashboard</a>
                     <a href="{% url 'core:server-list' %}" class="list-group-item list-group-item-action">Servers</a>
+                    <a href="{% url 'core:host-vm-list' %}" class="list-group-item list-group-item-action">Hosts & VMs</a>
                     {% if user.is_superuser %}
                     <a href="{% url 'core:server-create' %}" class="list-group-item list-group-item-action">Add Server</a>
+                    <a href="{% url 'core:host-create' %}" class="list-group-item list-group-item-action">Add Host</a>
                     <a href="{% url 'core:server-urls' %}" class="list-group-item list-group-item-action">Add Server Url</a>
                     {% endif %}
                     <a href="{% url 'core:server-urls-list' %}" class="list-group-item list-group-item-action">All URLs</a>

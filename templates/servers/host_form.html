@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit Host{% else %}Add Host{% endif %} - Server Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">{% if form.instance.pk %}Edit Host{% else %}Add Host{% endif %}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.hostname.id_for_label }}" class="form-label">Hostname</label>
+                            {{ form.hostname }}
+                            {% if form.hostname.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.hostname.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.hostname.help_text %}
+                                <small class="form-text text-muted">{{ form.hostname.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.ip_address.id_for_label }}" class="form-label">IP Address</label>
+                            {{ form.ip_address }}
+                            {% if form.ip_address.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.ip_address.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.ip_address.help_text %}
+                                <small class="form-text text-muted">{{ form.ip_address.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.status.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.status.help_text %}
+                                <small class="form-text text-muted">{{ form.status.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.total_cpu.id_for_label }}" class="form-label">Total CPU</label>
+                            {{ form.total_cpu }}
+                            {% if form.total_cpu.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.total_cpu.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.total_cpu.help_text %}
+                                <small class="form-text text-muted">{{ form.total_cpu.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.total_ram.id_for_label }}" class="form-label">Total RAM</label>
+                            {{ form.total_ram }}
+                            {% if form.total_ram.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.total_ram.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.total_ram.help_text %}
+                                <small class="form-text text-muted">{{ form.total_ram.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.hyperv_version.id_for_label }}" class="form-label">Hyper-V Version</label>
+                            {{ form.hyperv_version }}
+                            {% if form.hyperv_version.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.hyperv_version.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.hyperv_version.help_text %}
+                                <small class="form-text text-muted">{{ form.hyperv_version.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.department.id_for_label }}" class="form-label">Department</label>
+                            {{ form.department }}
+                            {% if form.department.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.department.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.department.help_text %}
+                                <small class="form-text text-muted">{{ form.department.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.owner.id_for_label }}" class="form-label">Owner</label>
+                            {{ form.owner }}
+                            {% if form.owner.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.owner.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.owner.help_text %}
+                                <small class="form-text text-muted">{{ form.owner.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                            <a href="{% url 'core:host-vm-list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add Bootstrap form classes to all form inputs
+    document.addEventListener('DOMContentLoaded', function() {
+        const formControls = document.querySelectorAll('input, select, textarea');
+        formControls.forEach(function(element) {
+            element.classList.add('form-control');
+        });
+    });
+</script>
+{% endblock %}

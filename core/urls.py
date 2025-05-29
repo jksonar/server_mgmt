@@ -16,4 +16,15 @@ urlpatterns = [
     path('servers/urls/<int:pk>/update/', views.HyperLinkUpdateView.as_view(), name='server-urls-update'),
     path('servers/urls/<int:pk>/delete/', views.HyperLinkDeleteView.as_view(), name='server-urls-delete'),
     path('servers/urls/all/', views.HyperLinkListView.as_view(), name='server-urls-list'),  # Add this line
+    
+    # Host-VM URLs
+    path('hosts/', views.HostVMListView.as_view(), name='host-vm-list'),
+    path('hosts/<int:pk>/', views.HostDetailView.as_view(), name='host-detail'),
+    path('hosts/add/', views.HostCreateView.as_view(), name='host-create'),
+    path('hosts/<int:pk>/update/', views.HostUpdateView.as_view(), name='host-update'),
+    path('vms/add/', views.VMCreateView.as_view(), name='vm-create'),
+    path('vms/<int:pk>/', views.VMDetailView.as_view(), name='vm-detail'),
+    path('vms/<int:pk>/update/', views.VMUpdateView.as_view(), name='vm-update'),
+    # Add VM to specific host
+    path('hosts/<int:host_id>/vms/add/', views.VMCreateView.as_view(), name='host-vm-create'),
 ]
