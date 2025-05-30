@@ -4,14 +4,17 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from .models import Server, ServerUpdate, Service, HyperLink, Host, VirtualMachine
 from .forms import HostForm, VirtualMachineForm
+from accounts.mixins import RoleBasedAccessMixin
 
-# 🔐 Mixin to filter servers by user department
-class ServerAccessMixin(LoginRequiredMixin):
+# 🔐 Mixin to filter servers by user department and role
+class ServerAccessMixin(RoleBasedAccessMixin):
     def get_queryset(self):
-        if self.request.user.is_superuser:
+        user = self.request.user
+        # Superuser and Admin can see all servers
+        if user.is_superuser or user.is_admin():
             return Server.objects.all()
-        # Filter servers by user's departments
-        return Server.objects.filter(department__in=self.request.user.departments.all()).distinct()
+        # Manager and Viewer can only see servers in their departments
+        return Server.objects.filter(department__in=user.departments.all()).distinct()
 
 
 # 📊 Dashboard View (Optional)
@@ -54,76 +57,102 @@ class ServerDetailView(ServerAccessMixin, DetailView):
         return context
 
 
-# ➕ Add Server (Admin and department managers)
-class ServerCreateView(LoginRequiredMixin, CreateView):
+# ➕ Add Server (Admin and Managers)
+class ServerCreateView(RoleBasedAccessMixin, CreateView):
     model = Server
     fields = ['name', 'ip_address', 'os', 'cpu', 'memory', 'disk', 'location', 'department', 'owner']
     template_name = "servers/server_form.html"
     success_url = reverse_lazy('core:server-list')
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can create servers
     
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        # Limit department choices to user's departments unless superuser
-        if not self.request.user.is_superuser:
-            form.fields['department'].queryset = self.request.user.departments.all()
+        user = self.request.user
+        # Limit department choices to user's departments unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
+            form.fields['department'].queryset = user.departments.all()
         return form
 
     def form_valid(self, form):
-        # Ensure user can only create servers for their departments
-        if not self.request.user.is_superuser:
-            if form.instance.department not in self.request.user.departments.all():
+        user = self.request.user
+        # Ensure user can only create servers for their departments unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
+            if form.instance.department not in user.departments.all():
                 form.add_error('department', 'You can only create servers for your departments')
                 return self.form_invalid(form)
         return super().form_valid(form)
 
-# ✏️ Update Server (Admin and department managers)
-class ServerUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+# ✏️ Update Server (Admin and Managers)
+class ServerUpdateView(RoleBasedAccessMixin, UpdateView):
     model = Server
     fields = ['name', 'ip_address', 'os', 'cpu', 'memory', 'disk', 'location', 'department', 'owner']
     template_name = "servers/server_form.html"
     success_url = reverse_lazy('core:server-list')
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can update servers
 
     def test_func(self):
-        # Allow access if user is superuser or server's department is in user's departments
+        user = self.request.user
         server = self.get_object()
-        return self.request.user.is_superuser or server.department in self.request.user.departments.all()
+        
+        # Admin and superuser can update any server
+        if user.is_superuser or user.is_admin():
+            return True
+            
+        # Manager can only update servers in their departments
+        if user.is_manager() and server.department in user.departments.all():
+            return True
+            
+        return False
     
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        # Limit department choices to user's departments unless superuser
-        if not self.request.user.is_superuser:
-            form.fields['department'].queryset = self.request.user.departments.all()
+        user = self.request.user
+        # Limit department choices to user's departments unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
+            form.fields['department'].queryset = user.departments.all()
         return form
 
     def form_valid(self, form):
-        # Ensure user can only update servers to their departments
-        if not self.request.user.is_superuser:
-            if form.instance.department not in self.request.user.departments.all():
+        user = self.request.user
+        # Ensure user can only update servers to their departments unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
+            if form.instance.department not in user.departments.all():
                 form.add_error('department', 'You can only assign servers to your departments')
                 return self.form_invalid(form)
         return super().form_valid(form)
 
 
 # ➕ Add Update Entry
-class ServerUpdateCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class ServerUpdateCreateView(RoleBasedAccessMixin, CreateView):
     model = ServerUpdate
     fields = ['server', 'update_type', 'notes', 'attachment']
     template_name = "servers/update_form.html"
     success_url = reverse_lazy('core:server-list')
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can add update entries
 
     def test_func(self):
+        user = self.request.user
+        
+        # Admin and superuser can update any server
+        if user.is_superuser or user.is_admin():
+            return True
+            
         # If server_id is in kwargs, check if user has access to this server
         if 'server_id' in self.kwargs:
             server = get_object_or_404(Server, id=self.kwargs['server_id'])
-            return self.request.user.is_superuser or server.department in self.request.user.departments.all()
-        return True  # Will be filtered in get_form
+            # Manager can only update servers in their departments
+            return user.is_manager() and server.department in user.departments.all()
+            
+        return user.is_manager()  # Will be filtered in get_form
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        # Limit server choices to user's accessible servers
-        if not self.request.user.is_superuser:
+        user = self.request.user
+        
+        # Limit server choices to user's accessible servers unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
             form.fields['server'].queryset = Server.objects.filter(
-                department__in=self.request.user.departments.all()
+                department__in=user.departments.all()
             ).distinct()
         
         # If server_id is in kwargs, pre-select the server
@@ -135,33 +164,46 @@ class ServerUpdateCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView
 
     def form_valid(self, form):
         form.instance.updated_by = self.request.user
-        # Double-check server access permission
-        if not self.request.user.is_superuser:
-            if form.instance.server.department not in self.request.user.departments.all():
+        user = self.request.user
+        
+        # Double-check server access permission unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
+            if form.instance.server.department not in user.departments.all():
                 form.add_error('server', 'You can only update servers in your departments')
                 return self.form_invalid(form)
         return super().form_valid(form)
 
 # ➕ Add Service
-class ServiceCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class ServiceCreateView(RoleBasedAccessMixin, CreateView):
     model = Service
     fields = ['server', 'name', 'port', 'status', 'last_restart']
     template_name = "servers/service_form.html"
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can add services
     success_url = reverse_lazy('core:server-list')
 
     def test_func(self):
+        user = self.request.user
+        
+        # Admin and superuser can add services to any server
+        if user.is_superuser or user.is_admin():
+            return True
+            
         # If server_id is in kwargs, check if user has access to this server
         if 'server_id' in self.kwargs:
             server = get_object_or_404(Server, id=self.kwargs['server_id'])
-            return self.request.user.is_superuser or server.department in self.request.user.departments.all()
-        return True  # Will be filtered in get_form
+            # Manager can only add services to servers in their departments
+            return user.is_manager() and server.department in user.departments.all()
+            
+        return user.is_manager()  # Will be filtered in get_form
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        # Limit server choices to user's accessible servers
-        if not self.request.user.is_superuser:
+        user = self.request.user
+        
+        # Limit server choices to user's accessible servers unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
             form.fields['server'].queryset = Server.objects.filter(
-                department__in=self.request.user.departments.all()
+                department__in=user.departments.all()
             ).distinct()
         
         # If server_id is in kwargs, pre-select the server
@@ -172,9 +214,11 @@ class ServiceCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         return form
 
     def form_valid(self, form):
-        # Double-check server access permission
-        if not self.request.user.is_superuser:
-            if form.instance.server.department not in self.request.user.departments.all():
+        user = self.request.user
+        
+        # Double-check server access permission unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
+            if form.instance.server.department not in user.departments.all():
                 form.add_error('server', 'You can only add services to servers in your departments')
                 return self.form_invalid(form)
         return super().form_valid(form)

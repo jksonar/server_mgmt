@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit User: {{ form.instance.username }}{% else %}Add New User{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{% if form.instance.pk %}Edit User{% else %}Add New User{% endif %}</h1>
+        <a href="{% url 'accounts:user-list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Users
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">{% if form.instance.pk %}Edit User: {{ form.instance.username }}{% else %}User Information{% endif %}</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Basic Information</h5>
+                        {{ form.username|crispy }}
+                        {{ form.email|crispy }}
+                        {{ form.first_name|crispy }}
+                        {{ form.last_name|crispy }}
+                        {% if not form.instance.pk %}
+                            {{ form.password1|crispy }}
+                            {{ form.password2|crispy }}
+                        {% endif %}
+                        {{ form.is_active|crispy }}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Role & Departments</h5>
+                        {{ form.role|crispy }}
+                        {{ form.departments|crispy }}
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% if form.instance.pk %}Update{% else %}Create{% endif %} User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

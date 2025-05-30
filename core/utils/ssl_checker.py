@@ -45,7 +45,7 @@ def get_ssl_expiry_date(url):
         # Extract expiry date
         naive_expiry_date = datetime.strptime(x509.get_notAfter().decode('ascii'), '%Y%m%d%H%M%SZ')
         # Make the expiry date timezone-aware
-        expiry_date = timezone.make_aware(naive_expiry_date, timezone.utc)
+        expiry_date = timezone.make_aware(naive_expiry_date, pytz.UTC)
         
         # Extract issuer and subject
         issuer = dict(x509.get_issuer().get_components())

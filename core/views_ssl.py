@@ -9,19 +9,22 @@ from django.http import JsonResponse
 from .models import HyperLink, SSLCertificate
 from .utils.ssl_checker import get_ssl_expiry_date, check_url_accessibility
 from .tasks import check_ssl_certificates
+from accounts.mixins import RoleBasedAccessMixin
 
-class SSLCertificateListView(LoginRequiredMixin, ListView):
+class SSLCertificateListView(RoleBasedAccessMixin, ListView):
     model = SSLCertificate
     template_name = "ssl/certificate_list.html"
     context_object_name = "certificates"
+    allowed_roles = ['admin', 'manager', 'viewer']  # All roles can view certificates
     
     def get_queryset(self):
-        # Get all certificates the user has access to
-        if self.request.user.is_superuser:
+        user = self.request.user
+        # Admin and superuser can see all certificates
+        if user.is_superuser or user.is_admin():
             return SSLCertificate.objects.all().select_related('hyperlink', 'hyperlink__servers')
-        # Filter certificates by user's departments
+        # Manager and Viewer can only see certificates in their departments
         return SSLCertificate.objects.filter(
-            hyperlink__servers__department__in=self.request.user.departments.all()
+            hyperlink__servers__department__in=user.departments.all()
         ).distinct().select_related('hyperlink', 'hyperlink__servers')
     
     def get_context_data(self, **kwargs):
@@ -37,25 +40,40 @@ class SSLCertificateListView(LoginRequiredMixin, ListView):
         
         return context
 
-class SSLCertificateDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+class SSLCertificateDetailView(RoleBasedAccessMixin, DetailView):
     model = SSLCertificate
     template_name = "ssl/certificate_detail.html"
     context_object_name = "certificate"
+    allowed_roles = ['admin', 'manager', 'viewer']  # All roles can view certificate details
     
     def test_func(self):
+        user = self.request.user
         certificate = self.get_object()
-        # Allow access if user is superuser or server's department is in user's departments
-        return self.request.user.is_superuser or certificate.hyperlink.servers.department in self.request.user.departments.all()
+        
+        # Admin and superuser can view any certificate
+        if user.is_superuser or user.is_admin():
+            return True
+            
+        # Manager and Viewer can only view certificates in their departments
+        return certificate.hyperlink.servers.department in user.departments.all()
 
-class CheckSSLCertificateView(LoginRequiredMixin, UserPassesTestMixin, View):
+class CheckSSLCertificateView(RoleBasedAccessMixin, View):
     """
     View to manually check an SSL certificate for a hyperlink
     """
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can check SSL certificates
+    
     def test_func(self):
+        user = self.request.user
         hyperlink_id = self.kwargs.get('pk')
         hyperlink = get_object_or_404(HyperLink, pk=hyperlink_id)
-        # Allow access if user is superuser or server's department is in user's departments
-        return self.request.user.is_superuser or hyperlink.servers.department in self.request.user.departments.all()
+        
+        # Admin and superuser can check any certificate
+        if user.is_superuser or user.is_admin():
+            return True
+            
+        # Manager can only check certificates in their departments
+        return user.is_manager() and hyperlink.servers.department in user.departments.all()
     
     def get(self, request, *args, **kwargs):
         hyperlink_id = self.kwargs.get('pk')
@@ -92,13 +110,15 @@ class CheckSSLCertificateView(LoginRequiredMixin, UserPassesTestMixin, View):
         # Redirect to certificate detail page
         return redirect('core:ssl-certificate-detail', pk=ssl_cert.pk)
 
-class RunSSLCheckView(LoginRequiredMixin, UserPassesTestMixin, View):
+class RunSSLCheckView(RoleBasedAccessMixin, View):
     """
     View to manually trigger the SSL certificate check task
     """
+    allowed_roles = ['admin']  # Only Admin can run SSL certificate check task
+    
     def test_func(self):
-        # Only superusers can run this task manually
-        return self.request.user.is_superuser
+        # Only superusers and admins can run this task manually
+        return self.request.user.is_superuser or self.request.user.is_admin()
     
     def get(self, request, *args, **kwargs):
         try:
@@ -115,10 +135,11 @@ class RunSSLCheckView(LoginRequiredMixin, UserPassesTestMixin, View):
         
         return redirect('core:ssl-certificate-list')
 
-class SSLCertificateAPIView(LoginRequiredMixin, View):
+class SSLCertificateAPIView(RoleBasedAccessMixin, View):
     """
     API view to get SSL certificate information for a URL
     """
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can use the SSL certificate API
     def get(self, request, *args, **kwargs):
         url = request.GET.get('url')
         
