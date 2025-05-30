@@ -3,6 +3,73 @@
 {% block title %}Host-VM Hierarchical View - Server Management{% endblock %}
 
 {% block content %}
+<style>
+    /* Hover highlights for interactive elements */
+    .accordion-button:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+        transition: background-color 0.2s ease;
+    }
+    
+    /* Active accordion styling */
+    .active-accordion, 
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(0, 123, 255, 0.15) !important;
+        color: #0056b3 !important;
+        box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25) !important;
+    }
+    
+    /* Cursor pointer for clickable elements */
+    .accordion-button, 
+    .btn,
+    .table-hover tbody tr {
+        cursor: pointer;
+    }
+    
+    /* Collapse state indicators with animation */
+    .accordion-button::after {
+        transition: transform 0.3s ease;
+    }
+    
+    /* Collapse content animation */
+    .accordion-collapse {
+        transition: all 0.3s ease-in-out;
+    }
+    
+    /* Enhanced hover effect for table rows */
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    /* Button hover animations */
+    .btn {
+        transition: all 0.2s ease;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Collapse indicator styling */
+    .collapse-indicator {
+        display: inline-block;
+        transition: all 0.3s ease;
+        margin-left: 10px;
+        font-size: 0.85rem;
+    }
+    
+    /* Animate the accordion content */
+    .accordion-body {
+        animation: fadeIn 0.4s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Host-VM Hierarchical View</h1>
@@ -23,7 +90,11 @@
                                 aria-controls="collapse{{ host.id }}">
                             <div class="d-flex justify-content-between w-100 me-3">
                                 <div>
-                                    <strong>{{ host.hostname }}</strong> ({{ vms|length }} VMs)
+                                    <strong>{{ host.hostname }}</strong> 
+                                    <span class="ms-2 badge bg-info text-white rounded-pill">{{ vms|length }} VMs</span>
+                                    <small class="ms-2 text-muted collapse-indicator">
+                                        <i class="fas fa-chevron-down"></i> Click to expand
+                                    </small>
                                 </div>
                                 <div class="text-muted">
                                     <span class="badge {% if host.status == 'online' %}bg-success{% else %}bg-danger{% endif %} me-2">
@@ -68,7 +139,7 @@
                                         </thead>
                                         <tbody>
                                             {% for vm in vms %}
-                                            <tr>
+                                            <tr data-vm-id="{{ vm.id }}" class="vm-row" title="Click for details">
                                                 <td>{{ vm.name }}</td>
                                                 <td>{{ vm.vm_id }}</td>
                                                 <td>{{ vm.guest_os }}</td>
@@ -80,7 +151,7 @@
                                                 <td>{{ vm.assigned_cpu }}</td>
                                                 <td>{{ vm.assigned_ram }}</td>
                                                 <td>{{ vm.ip_address|default:"N/A" }}</td>
-                                                <td>
+                                                <td class="actions-cell" onclick="event.stopPropagation();">
                                                     <a href="{% url 'core:vm-detail' vm.id %}" class="btn btn-sm btn-outline-info">View</a>
                                                     <a href="{% url 'core:vm-update' vm.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
                                                 </td>
@@ -107,4 +178,80 @@
         <div class="alert alert-info">No hosts found. <a href="{% url 'core:host-create' %}">Add a host</a> to get started.</div>
     {% endif %}
 </div>
+
+<script>
+    // Update collapse indicators based on collapse state
+    document.addEventListener('DOMContentLoaded', function() {
+        const accordionButtons = document.querySelectorAll('.accordion-button');
+        
+        // Initial setup
+        accordionButtons.forEach(button => {
+            updateCollapseIndicator(button);
+        });
+        
+        // Add event listeners to all accordion buttons
+        const accordionElements = document.querySelectorAll('.accordion-collapse');
+        accordionElements.forEach(element => {
+            element.addEventListener('show.bs.collapse', function() {
+                const button = document.querySelector(`[data-bs-target="#${this.id}"]`);
+                updateCollapseIndicator(button, true);
+            });
+            
+            element.addEventListener('hide.bs.collapse', function() {
+                const button = document.querySelector(`[data-bs-target="#${this.id}"]`);
+                updateCollapseIndicator(button, false);
+            });
+        });
+        
+        // Function to update collapse indicator text and icon
+        function updateCollapseIndicator(button, isExpanded) {
+            const indicator = button.querySelector('.collapse-indicator');
+            const icon = indicator.querySelector('i');
+            
+            // Use the button's aria-expanded attribute if isExpanded is not provided
+            if (isExpanded === undefined) {
+                isExpanded = button.getAttribute('aria-expanded') === 'true';
+            }
+            
+            if (isExpanded) {
+                indicator.innerHTML = '<i class="fas fa-chevron-up"></i> Click to collapse';
+                button.classList.add('active-accordion');
+            } else {
+                indicator.innerHTML = '<i class="fas fa-chevron-down"></i> Click to expand';
+                button.classList.remove('active-accordion');
+            }
+        }
+        
+        // Make VM rows clickable to navigate to VM detail page
+        const vmRows = document.querySelectorAll('.vm-row');
+        vmRows.forEach(row => {
+            row.addEventListener('click', function() {
+                const vmId = this.getAttribute('data-vm-id');
+                if (vmId) {
+                    // Add visual feedback before navigation
+                    this.style.backgroundColor = 'rgba(0, 123, 255, 0.2)';
+                    this.style.transition = 'background-color 0.2s ease';
+                    
+                    // Navigate to VM detail page after a short delay for visual feedback
+                    setTimeout(() => {
+                        // Use the same URL pattern as the View button
+                        const viewButton = this.querySelector('.btn-outline-info');
+                        if (viewButton) {
+                            window.location.href = viewButton.getAttribute('href');
+                        }
+                    }, 150);
+                }
+            });
+            
+            // Add hover effect with visual feedback
+            row.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
+            });
+            
+            row.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = '';
+            });
+        });
+    });
+</script>
 {% endblock %}

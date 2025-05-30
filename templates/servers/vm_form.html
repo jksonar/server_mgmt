@@ -1,17 +1,77 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if form.instance.pk %}Edit Virtual Machine{% else %}Add Virtual Machine{% endif %} - Server Management{% endblock %}
+{% block title %}{% if form.instance.pk %}Edit VM{% else %}Add VM{% endif %} - Server Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Form animations and transitions */
+    .form-control:focus {
+        transition: all 0.3s ease;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.1);
+    }
+    
+    .form-label {
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+    
+    .form-control:focus + .form-label,
+    .form-control:not(:placeholder-shown) + .form-label {
+        color: #007bff;
+    }
+    
+    /* Card animations */
+    .card {
+        animation: fadeInUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Button animations */
+    .btn {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn:active {
+        transform: translateY(1px);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'core:host-vm-list' %}">Hosts & VMs</a></li>
+                    {% if host %}
+                    <li class="breadcrumb-item"><a href="{% url 'core:host-detail' host.id %}">{{ host.hostname }}</a></li>
+                    {% endif %}
+                    <li class="breadcrumb-item active" aria-current="page">{% if form.instance.pk %}Edit VM{% else %}Add VM{% endif %}</li>
+                </ol>
+            </nav>
+            
+            <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">{% if form.instance.pk %}Edit Virtual Machine{% else %}Add Virtual Machine{% endif %}</h4>
+                    <h4 class="mb-0">
+                        <i class="fas {% if form.instance.pk %}fa-edit{% else %}fa-plus-circle{% endif %} me-2"></i>
+                        {% if form.instance.pk %}Edit Virtual Machine{% else %}Add Virtual Machine{% endif %}
+                    </h4>
                 </div>
                 <div class="card-body">
-                    <form method="post" novalidate>
+                    <form method="post" novalidate class="needs-validation">
                         {% csrf_token %}
                         
                         {% if not form.instance.pk and host %}
@@ -20,133 +80,172 @@
                                 <input type="hidden" name="host" value="{{ host.id }}">
                             </div>
                         {% else %}
-                            <div class="mb-3">
-                                <label for="{{ form.host.id_for_label }}" class="form-label">Host Server</label>
+                            <div class="mb-3 position-relative">
+                                <label for="{{ form.host.id_for_label }}" class="form-label">
+                                    <i class="fas fa-server me-1"></i> Host Server
+                                </label>
                                 {{ form.host }}
                                 {% if form.host.errors %}
-                                    <div class="text-danger">
+                                    <div class="invalid-feedback d-block">
                                         {% for error in form.host.errors %}
-                                            {{ error }}
+                                            <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                         {% endfor %}
                                     </div>
                                 {% endif %}
                                 {% if form.host.help_text %}
-                                    <small class="form-text text-muted">{{ form.host.help_text }}</small>
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle me-1"></i> {{ form.host.help_text }}
+                                    </small>
                                 {% endif %}
                             </div>
                         {% endif %}
                         
-                        <div class="mb-3">
-                            <label for="{{ form.name.id_for_label }}" class="form-label">VM Name</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                <i class="fas fa-tag me-1"></i> VM Name
+                            </label>
                             {{ form.name }}
                             {% if form.name.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.name.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.name.help_text %}
-                                <small class="form-text text-muted">{{ form.name.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.name.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="{{ form.vm_id.id_for_label }}" class="form-label">VM ID / UUID</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.vm_id.id_for_label }}" class="form-label">
+                                <i class="fas fa-fingerprint me-1"></i> VM ID / UUID
+                            </label>
                             {{ form.vm_id }}
                             {% if form.vm_id.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.vm_id.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.vm_id.help_text %}
-                                <small class="form-text text-muted">{{ form.vm_id.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.vm_id.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="{{ form.guest_os.id_for_label }}" class="form-label">Guest OS</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.guest_os.id_for_label }}" class="form-label">
+                                <i class="fas fa-desktop me-1"></i> Guest OS
+                            </label>
                             {{ form.guest_os }}
                             {% if form.guest_os.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.guest_os.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.guest_os.help_text %}
-                                <small class="form-text text-muted">{{ form.guest_os.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.guest_os.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">
+                                <i class="fas fa-toggle-on me-1"></i> Status
+                            </label>
                             {{ form.status }}
                             {% if form.status.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.status.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.status.help_text %}
-                                <small class="form-text text-muted">{{ form.status.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.status.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="{{ form.assigned_cpu.id_for_label }}" class="form-label">Assigned CPU</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.assigned_cpu.id_for_label }}" class="form-label">
+                                <i class="fas fa-microchip me-1"></i> Assigned CPU
+                            </label>
                             {{ form.assigned_cpu }}
                             {% if form.assigned_cpu.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.assigned_cpu.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.assigned_cpu.help_text %}
-                                <small class="form-text text-muted">{{ form.assigned_cpu.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.assigned_cpu.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="{{ form.assigned_ram.id_for_label }}" class="form-label">Assigned RAM</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.assigned_ram.id_for_label }}" class="form-label">
+                                <i class="fas fa-memory me-1"></i> Assigned RAM
+                            </label>
                             {{ form.assigned_ram }}
                             {% if form.assigned_ram.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.assigned_ram.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.assigned_ram.help_text %}
-                                <small class="form-text text-muted">{{ form.assigned_ram.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.assigned_ram.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="{{ form.ip_address.id_for_label }}" class="form-label">IP Address</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.ip_address.id_for_label }}" class="form-label">
+                                <i class="fas fa-network-wired me-1"></i> IP Address
+                            </label>
                             {{ form.ip_address }}
                             {% if form.ip_address.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.ip_address.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.ip_address.help_text %}
-                                <small class="form-text text-muted">{{ form.ip_address.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.ip_address.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="d-flex justify-content-between">
-                            <button type="submit" class="btn btn-primary">Save</button>
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Save
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            </button>
                             {% if host %}
-                                <a href="{% url 'core:host-detail' host.id %}" class="btn btn-secondary">Cancel</a>
+                                <a href="{% url 'core:host-detail' host.id %}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-1"></i> Cancel
+                                </a>
                             {% else %}
-                                <a href="{% url 'core:host-vm-list' %}" class="btn btn-secondary">Cancel</a>
+                                <a href="{% url 'core:host-vm-list' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-1"></i> Cancel
+                                </a>
                             {% endif %}
                         </div>
                     </form>
@@ -159,11 +258,40 @@
 
 {% block extra_js %}
 <script>
-    // Add Bootstrap form classes to all form inputs
     document.addEventListener('DOMContentLoaded', function() {
+        // Add Bootstrap form classes to all form inputs
         const formControls = document.querySelectorAll('input, select, textarea');
         formControls.forEach(function(element) {
             element.classList.add('form-control');
+        });
+        
+        // Form validation and submission handling
+        const form = document.querySelector('form.needs-validation');
+        const submitButton = form.querySelector('button[type="submit"]');
+        const spinner = submitButton.querySelector('.spinner-border');
+        
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            } else {
+                // Show loading spinner
+                spinner.classList.remove('d-none');
+                submitButton.setAttribute('disabled', 'disabled');
+            }
+            
+            form.classList.add('was-validated');
+        });
+        
+        // Add focus animation to form fields
+        formControls.forEach(function(element) {
+            element.addEventListener('focus', function() {
+                this.closest('.mb-3').classList.add('focused');
+            });
+            
+            element.addEventListener('blur', function() {
+                this.closest('.mb-3').classList.remove('focused');
+            });
         });
     });
 </script>

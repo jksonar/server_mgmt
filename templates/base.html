@@ -3,64 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Server Management System for tracking hosts and virtual machines">
     <title>{% block title %}Server Management{% endblock %}</title>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/static/css/custom.css" rel="stylesheet">
     <style>
         .sidebar {
             min-height: calc(100vh - 56px);
             background-color: #f8f9fa;
+            transition: all 0.3s ease;
         }
         .content {
             padding: 20px;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .collapse-transition {
+            transition: height 0.3s ease;
         }
     </style>
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <!-- Skip to content link for accessibility -->
+    <a href="#content" class="skip-link">Skip to content</a>
+    
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'core:DashboardView' %}">Server Management</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <a class="navbar-brand" href="{% url 'core:DashboardView' %}">
+                <i class="fas fa-server me-2"></i>Server Management
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation" aria-expanded="false">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="collapse navbar-collapse collapse-transition" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'core:DashboardView' %}">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'core:server-list' %}">
-                            <i class="fas fa-server"></i> Servers
+                        <a class="nav-link" href="{% url 'core:DashboardView' %}" data-bs-toggle="tooltip" title="Dashboard">
+                            <i class="fas fa-home me-1"></i> Home
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'core:host-vm-list' %}">
-                            <i class="fas fa-network-wired"></i> Hosts & VMs
+                        <a class="nav-link" href="{% url 'core:server-list' %}" data-bs-toggle="tooltip" title="View all servers">
+                            <i class="fas fa-server me-1"></i> Servers
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'core:server-list' %}">
-                            <i class="fas fa-link"></i> Server URLs
+                        <a class="nav-link" href="{% url 'core:host-vm-list' %}" data-bs-toggle="tooltip" title="View hosts and virtual machines">
+                            <i class="fas fa-network-wired me-1"></i> Hosts & VMs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:server-urls-list' %}" data-bs-toggle="tooltip" title="View server URLs">
+                            <i class="fas fa-link me-1"></i> Server URLs
                         </a>
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                {{ user.username }}
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-1"></i> {{ user.username }}
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                {% if user.is_superuse %}
-                                <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin</a></li>
+                            <ul class="dropdown-menu dropdown-menu-end fade-in">
+                                {% if user.is_superuser %}
+                                <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="fas fa-cog me-2"></i>Admin</a></li>
                                 {% endif %}
-                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="fas fa-id-card me-2"></i>Profile</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Logout</a></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                             </ul>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
+                            <a class="nav-link" href="{% url 'accounts:login' %}">
+                                <i class="fas fa-sign-in-alt me-1"></i> Login
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
@@ -72,27 +93,48 @@
         <div class="row">
             {% if user.is_authenticated %}
             <div class="col-md-2 sidebar py-3">
-                <div class="list-group">
-                    <a href="{% url 'core:DashboardView' %}" class="list-group-item list-group-item-action">Dashboard</a>
-                    <a href="{% url 'core:server-list' %}" class="list-group-item list-group-item-action">Servers</a>
-                    <a href="{% url 'core:host-vm-list' %}" class="list-group-item list-group-item-action">Hosts & VMs</a>
+                <div class="list-group shadow-sm">
+                    <a href="{% url 'core:DashboardView' %}" class="list-group-item list-group-item-action" data-bs-toggle="tooltip" title="View dashboard">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{% url 'core:server-list' %}" class="list-group-item list-group-item-action" data-bs-toggle="tooltip" title="View all servers">
+                        <i class="fas fa-server me-2"></i> Servers
+                    </a>
+                    <a href="{% url 'core:host-vm-list' %}" class="list-group-item list-group-item-action" data-bs-toggle="tooltip" title="View hosts and virtual machines">
+                        <i class="fas fa-network-wired me-2"></i> Hosts & VMs
+                    </a>
                     {% if user.is_superuser %}
-                    <a href="{% url 'core:server-create' %}" class="list-group-item list-group-item-action">Add Server</a>
-                    <a href="{% url 'core:host-create' %}" class="list-group-item list-group-item-action">Add Host</a>
-                    <a href="{% url 'core:server-urls' %}" class="list-group-item list-group-item-action">Add Server Url</a>
+                    <a href="{% url 'core:server-create' %}" class="list-group-item list-group-item-action" data-bs-toggle="tooltip" title="Add a new server">
+                        <i class="fas fa-plus-circle me-2"></i> Add Server
+                    </a>
+                    <a href="{% url 'core:host-create' %}" class="list-group-item list-group-item-action" data-bs-toggle="tooltip" title="Add a new host">
+                        <i class="fas fa-plus-circle me-2"></i> Add Host
+                    </a>
+                    <a href="{% url 'core:vm-create' %}" class="list-group-item list-group-item-action" data-bs-toggle="tooltip" title="Add a new virtual machine">
+                        <i class="fas fa-plus-circle me-2"></i> Add VM
+                    </a>
+                    <a href="{% url 'core:server-urls' %}" class="list-group-item list-group-item-action" data-bs-toggle="tooltip" title="Add a new server URL">
+                        <i class="fas fa-plus-circle me-2"></i> Add Server URL
+                    </a>
                     {% endif %}
-                    <a href="{% url 'core:server-urls-list' %}" class="list-group-item list-group-item-action">All URLs</a>
-                    <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">My Profile</a>
+                    <a href="{% url 'core:server-urls-list' %}" class="list-group-item list-group-item-action" data-bs-toggle="tooltip" title="View all server URLs">
+                        <i class="fas fa-link me-2"></i> All URLs
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action" data-bs-toggle="tooltip" title="View your profile">
+                        <i class="fas fa-user me-2"></i> My Profile
+                    </a>
                 </div>
             </div>
-            <main class="col-md-10 content">
+            <main id="content" class="col-md-10 content">
             {% else %}
-            <main class="col-md-12 content">
+            <main id="content" class="col-md-12 content">
             {% endif %}
                 {% if messages %}
                     {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% elif message.tags == 'info' %}fa-info-circle{% endif %} me-2"></i>
                         {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                     {% endfor %}
                 {% endif %}
@@ -102,6 +144,34 @@
         </div>
     </div>
 
+    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="/static/js/custom.js"></script>
+    {% block extra_js %}{% endblock %}
+    
+    <script>
+        // Highlight current page in sidebar and navbar
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            
+            // Highlight sidebar item
+            const sidebarLinks = document.querySelectorAll('.sidebar .list-group-item');
+            sidebarLinks.forEach(function(link) {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Highlight navbar item
+            const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+            navLinks.forEach(function(link) {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                    link.setAttribute('aria-current', 'page');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

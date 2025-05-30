@@ -2,127 +2,233 @@
 
 {% block title %}VM Details: {{ vm.name }} - Server Management{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Card animations */
+    .card {
+        animation: fadeInUp 0.5s ease-out;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Button animations */
+    .btn {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn:active {
+        transform: translateY(1px);
+    }
+    
+    /* Badge animations */
+    .badge {
+        transition: all 0.3s ease;
+    }
+    
+    /* Breadcrumb animations */
+    .breadcrumb-item a {
+        transition: all 0.3s ease;
+    }
+    
+    .breadcrumb-item a:hover {
+        color: #0056b3;
+        text-decoration: none;
+    }
+    
+    /* Table cell styling */
+    th {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    /* VM info list styling */
+    .vm-info-list {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    
+    .vm-info-list li {
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .vm-info-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .vm-info-label {
+        font-weight: 500;
+        color: #6c757d;
+    }
+    
+    .vm-info-value {
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2>VM Details: {{ vm.name }}</h2>
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'core:host-vm-list' %}">Hosts & VMs</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:host-detail' vm.host.id %}">{{ vm.host.hostname }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ vm.name }}</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-desktop me-2"></i>VM Details: {{ vm.name }}</h2>
                 <div>
-                    <a href="{% url 'core:host-detail' vm.host.id %}" class="btn btn-secondary">Back to Host</a>
+                    <a href="{% url 'core:host-detail' vm.host.id %}" class="btn btn-secondary">
+                        <i class="fas fa-server me-1"></i> Back to Host
+                    </a>
                     {% if perms.core.change_virtualmachine %}
-                        <a href="{% url 'core:vm-update' vm.id %}" class="btn btn-primary">Edit VM</a>
+                        <a href="{% url 'core:vm-update' vm.id %}" class="btn btn-primary ms-2">
+                            <i class="fas fa-edit me-1"></i> Edit VM
+                        </a>
                     {% endif %}
                 </div>
             </div>
             
-            <div class="card mb-4">
+            <div class="card mb-4 shadow">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Virtual Machine Information</h4>
+                    <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>Virtual Machine Information</h4>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <th style="width: 30%">VM Name:</th>
-                                    <td>{{ vm.name }}</td>
-                                </tr>
-                                <tr>
-                                    <th>VM ID / UUID:</th>
-                                    <td><code>{{ vm.vm_id }}</code></td>
-                                </tr>
-                                <tr>
-                                    <th>Guest OS:</th>
-                                    <td>{{ vm.guest_os }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Status:</th>
-                                    <td>
+                            <ul class="vm-info-list">
+                                <li>
+                                    <span class="vm-info-label"><i class="fas fa-desktop me-2 text-primary"></i>VM Name:</span>
+                                    <span class="vm-info-value">{{ vm.name }}</span>
+                                </li>
+                                <li>
+                                    <span class="vm-info-label"><i class="fas fa-fingerprint me-2 text-primary"></i>VM ID / UUID:</span>
+                                    <span class="vm-info-value"><code>{{ vm.vm_id }}</code></span>
+                                </li>
+                                <li>
+                                    <span class="vm-info-label"><i class="fas fa-laptop-code me-2 text-primary"></i>Guest OS:</span>
+                                    <span class="vm-info-value">{{ vm.guest_os }}</span>
+                                </li>
+                                <li>
+                                    <span class="vm-info-label"><i class="fas fa-toggle-on me-2 text-primary"></i>Status:</span>
+                                    <span class="vm-info-value">
                                         {% if vm.status == 'running' %}
-                                            <span class="badge bg-success">Running</span>
+                                            <span class="badge bg-success rounded-pill px-3 py-2">
+                                                <i class="fas fa-check-circle me-1"></i>Running
+                                            </span>
                                         {% else %}
-                                            <span class="badge bg-danger">Stopped</span>
+                                            <span class="badge bg-danger rounded-pill px-3 py-2">
+                                                <i class="fas fa-times-circle me-1"></i>Stopped
+                                            </span>
                                         {% endif %}
-                                    </td>
-                                </tr>
-                            </table>
+                                    </span>
+                                </li>
+                            </ul>
                         </div>
                         <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <th style="width: 30%">Assigned CPU:</th>
-                                    <td>{{ vm.assigned_cpu }} cores</td>
-                                </tr>
-                                <tr>
-                                    <th>Assigned RAM:</th>
-                                    <td>{{ vm.assigned_ram }} GB</td>
-                                </tr>
-                                <tr>
-                                    <th>IP Address:</th>
-                                    <td>{{ vm.ip_address|default:"Not assigned" }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Host Server:</th>
-                                    <td>
-                                        <a href="{% url 'core:host-detail' vm.host.id %}">
-                                            {{ vm.host.hostname }} ({{ vm.host.ip_address }})
+                            <ul class="vm-info-list">
+                                <li>
+                                    <span class="vm-info-label"><i class="fas fa-microchip me-2 text-primary"></i>Assigned CPU:</span>
+                                    <span class="vm-info-value">{{ vm.assigned_cpu }} cores</span>
+                                </li>
+                                <li>
+                                    <span class="vm-info-label"><i class="fas fa-memory me-2 text-primary"></i>Assigned RAM:</span>
+                                    <span class="vm-info-value">{{ vm.assigned_ram }} GB</span>
+                                </li>
+                                <li>
+                                    <span class="vm-info-label"><i class="fas fa-network-wired me-2 text-primary"></i>IP Address:</span>
+                                    <span class="vm-info-value">{{ vm.ip_address|default:"Not assigned" }}</span>
+                                </li>
+                                <li>
+                                    <span class="vm-info-label"><i class="fas fa-server me-2 text-primary"></i>Host Server:</span>
+                                    <span class="vm-info-value">
+                                        <a href="{% url 'core:host-detail' vm.host.id %}" class="text-decoration-none">
+                                            {{ vm.host.hostname }} <small class="text-muted">({{ vm.host.ip_address }})</small>
                                         </a>
-                                    </td>
-                                </tr>
-                            </table>
+                                    </span>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="card">
+            <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Host Information</h4>
+                    <h4 class="mb-0"><i class="fas fa-server me-2"></i>Host Information</h4>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <th style="width: 30%">Hostname:</th>
-                                    <td>{{ vm.host.hostname }}</td>
-                                </tr>
-                                <tr>
-                                    <th>IP Address:</th>
-                                    <td>{{ vm.host.ip_address }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Status:</th>
-                                    <td>
+                            <ul class="vm-info-list">
+                                <li>
+                                    <span class="vm-info-label"><i class="fas fa-server me-2 text-primary"></i>Hostname:</span>
+                                    <span class="vm-info-value">{{ vm.host.hostname }}</span>
+                                </li>
+                                <li>
+                                    <span class="vm-info-label"><i class="fas fa-network-wired me-2 text-primary"></i>IP Address:</span>
+                                    <span class="vm-info-value">{{ vm.host.ip_address }}</span>
+                                </li>
+                                <li>
+                                    <span class="vm-info-label"><i class="fas fa-toggle-on me-2 text-primary"></i>Status:</span>
+                                    <span class="vm-info-value">
                                         {% if vm.host.status == 'online' %}
-                                            <span class="badge bg-success">Online</span>
+                                            <span class="badge bg-success rounded-pill px-3 py-2">
+                                                <i class="fas fa-check-circle me-1"></i>Online
+                                            </span>
                                         {% else %}
-                                            <span class="badge bg-danger">Offline</span>
+                                            <span class="badge bg-danger rounded-pill px-3 py-2">
+                                                <i class="fas fa-times-circle me-1"></i>Offline
+                                            </span>
                                         {% endif %}
-                                    </td>
-                                </tr>
-                            </table>
+                                    </span>
+                                </li>
+                            </ul>
                         </div>
                         <div class="col-md-6">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <th style="width: 30%">Total CPU:</th>
-                                    <td>{{ vm.host.total_cpu }} cores</td>
-                                </tr>
-                                <tr>
-                                    <th>Total RAM:</th>
-                                    <td>{{ vm.host.total_ram }} GB</td>
-                                </tr>
-                                <tr>
-                                    <th>Department:</th>
-                                    <td>{{ vm.host.department.name }}</td>
-                                </tr>
-                            </table>
+                            <ul class="vm-info-list">
+                                <li>
+                                    <span class="vm-info-label"><i class="fas fa-microchip me-2 text-primary"></i>Total CPU:</span>
+                                    <span class="vm-info-value">{{ vm.host.total_cpu }} cores</span>
+                                </li>
+                                <li>
+                                    <span class="vm-info-label"><i class="fas fa-memory me-2 text-primary"></i>Total RAM:</span>
+                                    <span class="vm-info-value">{{ vm.host.total_ram }} GB</span>
+                                </li>
+                                <li>
+                                    <span class="vm-info-label"><i class="fas fa-building me-2 text-primary"></i>Department:</span>
+                                    <span class="vm-info-value">{{ vm.host.department.name }}</span>
+                                </li>
+                            </ul>
                         </div>
                     </div>
-                    <div class="mt-3">
-                        <a href="{% url 'core:host-detail' vm.host.id %}" class="btn btn-outline-primary">View Host Details</a>
+                    <div class="mt-4">
+                        <a href="{% url 'core:host-detail' vm.host.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-server me-1"></i> View Host Details
+                        </a>
                     </div>
                 </div>
             </div>

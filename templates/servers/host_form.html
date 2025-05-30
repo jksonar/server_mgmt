@@ -2,141 +2,235 @@
 
 {% block title %}{% if form.instance.pk %}Edit Host{% else %}Add Host{% endif %} - Server Management{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Form animations and transitions */
+    .form-control:focus {
+        transition: all 0.3s ease;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.1);
+    }
+    
+    .form-label {
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+    
+    .form-control:focus + .form-label,
+    .form-control:not(:placeholder-shown) + .form-label {
+        color: #007bff;
+    }
+    
+    /* Card animations */
+    .card {
+        animation: fadeInUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Button animations */
+    .btn {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn:active {
+        transform: translateY(1px);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'core:host-vm-list' %}">Hosts & VMs</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% if form.instance.pk %}Edit Host{% else %}Add Host{% endif %}</li>
+                </ol>
+            </nav>
+            
+            <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">{% if form.instance.pk %}Edit Host{% else %}Add Host{% endif %}</h4>
+                    <h4 class="mb-0">
+                        <i class="fas {% if form.instance.pk %}fa-edit{% else %}fa-plus-circle{% endif %} me-2"></i>
+                        {% if form.instance.pk %}Edit Host{% else %}Add Host{% endif %}
+                    </h4>
                 </div>
                 <div class="card-body">
-                    <form method="post" novalidate>
+                    <form method="post" novalidate class="needs-validation">
                         {% csrf_token %}
                         
-                        <div class="mb-3">
-                            <label for="{{ form.hostname.id_for_label }}" class="form-label">Hostname</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.hostname.id_for_label }}" class="form-label">
+                                <i class="fas fa-server me-1"></i> Hostname
+                            </label>
                             {{ form.hostname }}
                             {% if form.hostname.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.hostname.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.hostname.help_text %}
-                                <small class="form-text text-muted">{{ form.hostname.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.hostname.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="{{ form.ip_address.id_for_label }}" class="form-label">IP Address</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.ip_address.id_for_label }}" class="form-label">
+                                <i class="fas fa-network-wired me-1"></i> IP Address
+                            </label>
                             {{ form.ip_address }}
                             {% if form.ip_address.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.ip_address.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.ip_address.help_text %}
-                                <small class="form-text text-muted">{{ form.ip_address.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.ip_address.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">
+                                <i class="fas fa-toggle-on me-1"></i> Status
+                            </label>
                             {{ form.status }}
                             {% if form.status.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.status.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.status.help_text %}
-                                <small class="form-text text-muted">{{ form.status.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.status.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="{{ form.total_cpu.id_for_label }}" class="form-label">Total CPU</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.total_cpu.id_for_label }}" class="form-label">
+                                <i class="fas fa-microchip me-1"></i> Total CPU
+                            </label>
                             {{ form.total_cpu }}
                             {% if form.total_cpu.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.total_cpu.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.total_cpu.help_text %}
-                                <small class="form-text text-muted">{{ form.total_cpu.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.total_cpu.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="{{ form.total_ram.id_for_label }}" class="form-label">Total RAM</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.total_ram.id_for_label }}" class="form-label">
+                                <i class="fas fa-memory me-1"></i> Total RAM
+                            </label>
                             {{ form.total_ram }}
                             {% if form.total_ram.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.total_ram.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.total_ram.help_text %}
-                                <small class="form-text text-muted">{{ form.total_ram.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.total_ram.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="{{ form.hyperv_version.id_for_label }}" class="form-label">Hyper-V Version</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.hyperv_version.id_for_label }}" class="form-label">
+                                <i class="fas fa-code-branch me-1"></i> Hyper-V Version
+                            </label>
                             {{ form.hyperv_version }}
                             {% if form.hyperv_version.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.hyperv_version.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.hyperv_version.help_text %}
-                                <small class="form-text text-muted">{{ form.hyperv_version.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.hyperv_version.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="{{ form.department.id_for_label }}" class="form-label">Department</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.department.id_for_label }}" class="form-label">
+                                <i class="fas fa-building me-1"></i> Department
+                            </label>
                             {{ form.department }}
                             {% if form.department.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.department.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.department.help_text %}
-                                <small class="form-text text-muted">{{ form.department.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.department.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="{{ form.owner.id_for_label }}" class="form-label">Owner</label>
+                        <div class="mb-3 position-relative">
+                            <label for="{{ form.owner.id_for_label }}" class="form-label">
+                                <i class="fas fa-user me-1"></i> Owner
+                            </label>
                             {{ form.owner }}
                             {% if form.owner.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback d-block">
                                     {% for error in form.owner.errors %}
-                                        {{ error }}
+                                        <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
                             {% if form.owner.help_text %}
-                                <small class="form-text text-muted">{{ form.owner.help_text }}</small>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> {{ form.owner.help_text }}
+                                </small>
                             {% endif %}
                         </div>
                         
-                        <div class="d-flex justify-content-between">
-                            <button type="submit" class="btn btn-primary">Save</button>
-                            <a href="{% url 'core:host-vm-list' %}" class="btn btn-secondary">Cancel</a>
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Save
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            </button>
+                            <a href="{% url 'core:host-vm-list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i> Cancel
+                            </a>
                         </div>
                     </form>
                 </div>

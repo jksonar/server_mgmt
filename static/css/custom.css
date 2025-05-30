@@ -1,0 +1,277 @@
+/* Server Management - Custom CSS for UI/UX Enhancement */
+
+/* ===== DYNAMIC ELEMENTS ===== */
+
+/* Responsive buttons, menus, modals */
+.btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    transform-origin: center;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Button ripple effect */
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%, -50%);
+    transform-origin: 50% 50%;
+}
+
+.btn:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(20, 20);
+        opacity: 0;
+    }
+}
+
+/* Interactive components */
+.card {
+    transition: all 0.3s ease;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* ===== TRANSITIONS & ANIMATIONS ===== */
+
+/* Smooth transitions between states */
+.nav-link, .list-group-item, .dropdown-item {
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-link:hover, .list-group-item:hover, .dropdown-item:hover {
+    transform: translateX(3px);
+}
+
+/* Visual cues */
+.table-hover tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Fade animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+/* Accordion animations */
+.accordion-button {
+    transition: all 0.3s ease;
+}
+
+.accordion-button:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.accordion-button::after {
+    transition: transform 0.3s ease;
+}
+
+.accordion-collapse {
+    transition: all 0.3s ease-in-out;
+}
+
+.collapse-indicator {
+    display: inline-block;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+    font-size: 0.85rem;
+}
+
+/* ===== USER INPUT HANDLING ===== */
+
+/* Form styling */
+.form-control {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 0.375rem;
+}
+
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+}
+
+.form-control.is-valid {
+    animation: validPulse 1s ease-in-out;
+}
+
+.form-control.is-invalid {
+    animation: invalidPulse 1s ease-in-out;
+}
+
+@keyframes validPulse {
+    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+@keyframes invalidPulse {
+    0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+/* Tooltips */
+.tooltip {
+    transition: opacity 0.3s ease;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Responsive card grid */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .btn {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+/* Focus states */
+:focus {
+    outline: 2px solid #80bdff;
+    outline-offset: 2px;
+}
+
+/* Skip to content link for keyboard users */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #000;
+    color: white;
+    padding: 8px;
+    z-index: 100;
+    transition: top 0.3s ease;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+    .btn, .card, .nav-link {
+        border: 1px solid currentColor;
+    }
+}
+
+/* ===== FEEDBACK & VISIBILITY ===== */
+
+/* Status indicators */
+.status-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-online {
+    background-color: #28a745;
+    box-shadow: 0 0 5px #28a745;
+}
+
+.status-offline {
+    background-color: #dc3545;
+    box-shadow: 0 0 5px #dc3545;
+}
+
+/* Alert animations */
+.alert {
+    animation: slideInDown 0.5s ease-in-out;
+    border-radius: 0.5rem;
+}
+
+@keyframes slideInDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* ===== MINIMIZE COGNITIVE LOAD ===== */
+
+/* Simple layouts */
+.sidebar .list-group-item {
+    border-radius: 0;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.sidebar .list-group-item:hover,
+.sidebar .list-group-item.active {
+    border-left-color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Clear CTAs */
+.btn-primary {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.6s ease;
+    z-index: -1;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
