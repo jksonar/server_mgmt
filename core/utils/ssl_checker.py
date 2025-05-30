@@ -5,6 +5,8 @@ import requests
 from datetime import datetime
 import logging
 from urllib.parse import urlparse
+from django.utils import timezone
+import pytz
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +43,9 @@ def get_ssl_expiry_date(url):
         x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_ASN1, cert)
         
         # Extract expiry date
-        expiry_date = datetime.strptime(x509.get_notAfter().decode('ascii'), '%Y%m%d%H%M%SZ')
+        naive_expiry_date = datetime.strptime(x509.get_notAfter().decode('ascii'), '%Y%m%d%H%M%SZ')
+        # Make the expiry date timezone-aware
+        expiry_date = timezone.make_aware(naive_expiry_date, timezone.utc)
         
         # Extract issuer and subject
         issuer = dict(x509.get_issuer().get_components())
@@ -50,8 +54,8 @@ def get_ssl_expiry_date(url):
         subject = dict(x509.get_subject().get_components())
         subject_str = ', '.join([f"{k.decode('utf-8')}={v.decode('utf-8')}" for k, v in subject.items()])
         
-        # Check if certificate is valid
-        is_valid = datetime.now() < expiry_date
+        # Check if certificate is valid using timezone-aware comparison
+        is_valid = timezone.now() < expiry_date
         
         sock.close()
         conn.close()
