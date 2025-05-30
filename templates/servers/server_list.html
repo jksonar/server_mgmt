@@ -81,7 +81,7 @@
 <div class="container mt-4">
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'core:DashboardView' %}">Dashboard</a></li>
             <li class="breadcrumb-item active" aria-current="page">Servers</li>
         </ol>
     </nav>
@@ -120,7 +120,7 @@
                     </thead>
                     <tbody>
                         {% for server in servers %}
-                        <tr class="server-row" onclick="window.location='{% url 'core:server-detail' server.pk %}'" style="cursor: pointer;">
+                        <tr class="server-row">
                             <td><strong>{{ server.name }}</strong></td>
                             <td>{{ server.ip_address }}</td>
                             <td>{{ server.os }}</td>
@@ -162,25 +162,5 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Server search functionality
-        const searchInput = document.getElementById('serverSearch');
-        const serverTable = document.getElementById('serverTable');
-        const rows = serverTable.querySelectorAll('tbody tr');
-        
-        searchInput.addEventListener('keyup', function() {
-            const searchTerm = searchInput.value.toLowerCase();
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
-    });
-</script>
+
 {% endblock %}

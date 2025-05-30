@@ -159,7 +159,7 @@
                     </thead>
                     <tbody>
                         {% for server in servers|slice:":5" %}
-                        <tr onclick="window.location='{% url \'core:server-detail\' server.pk %}'" style="cursor: pointer;">
+                        <tr class="server-row">
                             <td><strong>{{ server.name }}</strong></td>
                             <td>{{ server.ip_address }}</td>
                             <td>{{ server.os }}</td>

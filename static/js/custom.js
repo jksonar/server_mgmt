@@ -117,6 +117,12 @@ function initTables() {
             // Skip rows that already have click handlers (like VM rows)
             if (row.classList.contains('vm-row')) return;
             
+            // Handle server-row class specifically for server list
+            if (row.classList.contains('server-row')) {
+                handleServerRowClick(row);
+                return;
+            }
+            
             // Make rows with detail links clickable
             const detailLink = row.querySelector('a.btn-info, a.btn-outline-info');
             if (detailLink) {
@@ -139,6 +145,62 @@ function initTables() {
                         window.location.href = detailLink.getAttribute('href');
                     }, 150);
                 });
+            }
+        });
+    });
+    
+    // Initialize server search functionality if present
+    initServerSearch();
+}
+
+// Handle server row click events
+function handleServerRowClick(row) {
+    row.style.cursor = 'pointer';
+    
+    // Find the detail link to get the URL
+    const detailLink = row.querySelector('a.btn-info');
+    if (!detailLink) return;
+    
+    const detailUrl = detailLink.getAttribute('href');
+    
+    row.addEventListener('click', function(event) {
+        // Don't trigger if clicking on a button or link or their containers
+        if (event.target.tagName === 'A' || event.target.tagName === 'BUTTON' ||
+            event.target.closest('a') || event.target.closest('button') ||
+            event.target.closest('[onclick="event.stopPropagation();"]')) {
+            return;
+        }
+        
+        // Add visual feedback
+        this.style.backgroundColor = 'rgba(0, 123, 255, 0.2)';
+        this.style.transition = 'background-color 0.2s ease';
+        
+        // Navigate to detail page
+        setTimeout(() => {
+            window.location.href = detailUrl;
+        }, 150);
+    });
+}
+
+// Initialize server search functionality
+function initServerSearch() {
+    const searchInput = document.getElementById('serverSearch');
+    if (!searchInput) return;
+    
+    const serverTable = document.getElementById('serverTable');
+    if (!serverTable) return;
+    
+    const rows = serverTable.querySelectorAll('tbody tr');
+    
+    searchInput.addEventListener('keyup', function() {
+        const searchTerm = searchInput.value.toLowerCase();
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
             }
         });
     });
