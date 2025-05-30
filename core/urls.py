@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import views_ssl
 
 app_name = 'core'
 
@@ -27,4 +28,11 @@ urlpatterns = [
     path('vms/<int:pk>/update/', views.VMUpdateView.as_view(), name='vm-update'),
     # Add VM to specific host
     path('hosts/<int:host_id>/vms/add/', views.VMCreateView.as_view(), name='host-vm-create'),
+    
+    # SSL Certificate URLs
+    path('ssl/certificates/', views_ssl.SSLCertificateListView.as_view(), name='ssl-certificate-list'),
+    path('ssl/certificates/<int:pk>/', views_ssl.SSLCertificateDetailView.as_view(), name='ssl-certificate-detail'),
+    path('ssl/check/<int:pk>/', views_ssl.CheckSSLCertificateView.as_view(), name='check-ssl-certificate'),
+    path('ssl/run-check/', views_ssl.RunSSLCheckView.as_view(), name='run-ssl-check'),
+    path('ssl/api/check/', views_ssl.SSLCertificateAPIView.as_view(), name='ssl-api-check'),
 ]

@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from accounts.models import Department
+from datetime import datetime, timedelta
 
 class Server(models.Model):
     name = models.CharField(max_length=100)
@@ -91,3 +92,58 @@ class VirtualMachine(models.Model):
 
     def __str__(self):
         return f"{self.name} on {self.host.hostname}"
+
+# SSL Certificate Expiry Model
+class SSLCertificate(models.Model):
+    NOTIFICATION_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('notified', 'Notified'),
+        ('expired', 'Expired'),
+    ]
+    
+    hyperlink = models.OneToOneField(HyperLink, on_delete=models.CASCADE, related_name='ssl_certificate')
+    expiry_date = models.DateTimeField(null=True, blank=True)
+    last_checked = models.DateTimeField(auto_now=True)
+    notification_status = models.CharField(max_length=20, choices=NOTIFICATION_STATUS_CHOICES, default='pending')
+    issuer = models.CharField(max_length=255, blank=True)
+    subject = models.CharField(max_length=255, blank=True)
+    is_valid = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"SSL for {self.hyperlink.url} (Expires: {self.expiry_date})"
+    
+    @property
+    def days_to_expiry(self):
+        if not self.expiry_date:
+            return None
+        return (self.expiry_date - datetime.now().replace(tzinfo=self.expiry_date.tzinfo)).days
+    
+    @property
+    def status(self):
+        if not self.expiry_date:
+            return "Unknown"
+        days = self.days_to_expiry
+        if days is None:
+            return "Unknown"
+        elif days < 0:
+            return "Expired"
+        elif days < 7:
+            return "Critical"
+        elif days < 30:
+            return "Warning"
+        else:
+            return "Valid"
+    
+    @property
+    def status_color(self):
+        status = self.status
+        if status == "Expired":
+            return "danger"
+        elif status == "Critical":
+            return "danger"
+        elif status == "Warning":
+            return "warning"
+        elif status == "Valid":
+            return "success"
+        else:
+            return "secondary"

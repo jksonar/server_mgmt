@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+
+{% block title %}SSL Certificates{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">SSL Certificates</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'core:DashboardView' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">SSL Certificates</li>
+    </ol>
+    
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-shield-alt me-1"></i> SSL Certificate Status</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body py-2 text-center">
+                                    <h5 class="mb-0">{{ valid_certs|length }}</h5>
+                                    <div class="small">Valid</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body py-2 text-center">
+                                    <h5 class="mb-0">{{ warning_certs|length }}</h5>
+                                    <div class="small">Warning</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body py-2 text-center">
+                                    <h5 class="mb-0">{{ critical_certs|length }}</h5>
+                                    <div class="small">Critical</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body py-2 text-center">
+                                    <h5 class="mb-0">{{ expired_certs|length }}</h5>
+                                    <div class="small">Expired</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-sync-alt me-1"></i> Actions
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if user.is_superuser %}
+                        <a href="{% url 'core:run-ssl-check' %}" class="btn btn-primary">
+                            <i class="fas fa-sync-alt me-1"></i> Run SSL Certificate Check
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'core:server-urls-list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-link me-1"></i> Manage URLs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if critical_certs %}
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <i class="fas fa-exclamation-triangle me-1"></i> Critical (Expiring within 7 days)
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="criticalCertsTable">
+                    <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>Server</th>
+                            <th>Expiry Date</th>
+                            <th>Days Left</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cert in critical_certs %}
+                        <tr>
+                            <td>{{ cert.hyperlink.url }}</td>
+                            <td>{{ cert.hyperlink.servers.name }}</td>
+                            <td>{{ cert.expiry_date|date:"Y-m-d" }}</td>
+                            <td><span class="badge bg-danger">{{ cert.days_to_expiry }} days</span></td>
+                            <td>
+                                <a href="{% url 'core:ssl-certificate-detail' cert.pk %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-info-circle"></i>
+                                </a>
+                                <a href="{% url 'core:check-ssl-certificate' cert.hyperlink.pk %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-sync-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if warning_certs %}
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <i class="fas fa-exclamation-circle me-1"></i> Warning (Expiring within 30 days)
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="warningCertsTable">
+                    <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>Server</th>
+                            <th>Expiry Date</th>
+                            <th>Days Left</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cert in warning_certs %}
+                        <tr>
+                            <td>{{ cert.hyperlink.url }}</td>
+                            <td>{{ cert.hyperlink.servers.name }}</td>
+                            <td>{{ cert.expiry_date|date:"Y-m-d" }}</td>
+                            <td><span class="badge bg-warning text-dark">{{ cert.days_to_expiry }} days</span></td>
+                            <td>
+                                <a href="{% url 'core:ssl-certificate-detail' cert.pk %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-info-circle"></i>
+                                </a>
+                                <a href="{% url 'core:check-ssl-certificate' cert.hyperlink.pk %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-sync-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if valid_certs %}
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <i class="fas fa-check-circle me-1"></i> Valid Certificates
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="validCertsTable">
+                    <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>Server</th>
+                            <th>Expiry Date</th>
+                            <th>Days Left</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cert in valid_certs %}
+                        <tr>
+                            <td>{{ cert.hyperlink.url }}</td>
+                            <td>{{ cert.hyperlink.servers.name }}</td>
+                            <td>{{ cert.expiry_date|date:"Y-m-d" }}</td>
+                            <td><span class="badge bg-success">{{ cert.days_to_expiry }} days</span></td>
+                            <td>
+                                <a href="{% url 'core:ssl-certificate-detail' cert.pk %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-info-circle"></i>
+                                </a>
+                                <a href="{% url 'core:check-ssl-certificate' cert.hyperlink.pk %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-sync-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if expired_certs %}
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <i class="fas fa-times-circle me-1"></i> Expired Certificates
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="expiredCertsTable">
+                    <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>Server</th>
+                            <th>Expiry Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cert in expired_certs %}
+                        <tr>
+                            <td>{{ cert.hyperlink.url }}</td>
+                            <td>{{ cert.hyperlink.servers.name }}</td>
+                            <td>{{ cert.expiry_date|date:"Y-m-d" }}</td>
+                            <td><span class="badge bg-danger">Expired</span></td>
+                            <td>
+                                <a href="{% url 'core:ssl-certificate-detail' cert.pk %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-info-circle"></i>
+                                </a>
+                                <a href="{% url 'core:check-ssl-certificate' cert.hyperlink.pk %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-sync-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if unknown_certs %}
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <i class="fas fa-question-circle me-1"></i> Unknown Status
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="unknownCertsTable">
+                    <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>Server</th>
+                            <th>Last Checked</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cert in unknown_certs %}
+                        <tr>
+                            <td>{{ cert.hyperlink.url }}</td>
+                            <td>{{ cert.hyperlink.servers.name }}</td>
+                            <td>{{ cert.last_checked|date:"Y-m-d H:i" }}</td>
+                            <td><span class="badge bg-secondary">Unknown</span></td>
+                            <td>
+                                <a href="{% url 'core:check-ssl-certificate' cert.hyperlink.pk %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-sync-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if not certificates %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-1"></i> No SSL certificates found. Add URLs to servers and run the SSL certificate check.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTables
+        const tables = [
+            '#criticalCertsTable',
+            '#warningCertsTable',
+            '#validCertsTable',
+            '#expiredCertsTable',
+            '#unknownCertsTable'
+        ];
+        
+        tables.forEach(tableId => {
+            const table = document.querySelector(tableId);
+            if (table) {
+                $(tableId).DataTable({
+                    responsive: true,
+                    order: [[3, 'asc']],
+                    pageLength: 10,
+                    lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]]
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

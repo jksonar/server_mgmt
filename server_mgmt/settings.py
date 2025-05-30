@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'accounts',
+    'django_celery_beat',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -128,3 +130,41 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 AUTH_USER_MODEL = 'accounts.User'
+
+# Celery Configuration
+# Using filesystem as broker and result backend
+CELERY_BROKER_URL = 'filesystem://'
+CELERY_RESULT_BACKEND = 'file://{}/.celery/results'.format(BASE_DIR)
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# Filesystem broker settings
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'data_folder_in': os.path.join(BASE_DIR, '.celery/broker/in'),
+    'data_folder_out': os.path.join(BASE_DIR, '.celery/broker/out'),
+    'data_folder_processed': os.path.join(BASE_DIR, '.celery/broker/processed'),
+}
+
+# Create necessary directories
+os.makedirs(os.path.join(BASE_DIR, '.celery/results'), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, '.celery/broker/in'), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, '.celery/broker/out'), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, '.celery/broker/processed'), exist_ok=True)
+
+# Import Celery Beat schedule
+from core.celery_beat_schedule import BEAT_SCHEDULE
+CELERY_BEAT_SCHEDULE = BEAT_SCHEDULE
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
+EMAIL_HOST = 'smtp.example.com'  # Change in production
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email@example.com'  # Change in production
+EMAIL_HOST_PASSWORD = 'your-password'  # Change in production
+DEFAULT_FROM_EMAIL = 'Server Management <noreply@servermgmt.example.com>'
+
+# SSL Certificate settings
+SSL_NOTIFICATION_DAYS = [30, 14, 7, 3, 1]  # Days before expiry to send notifications

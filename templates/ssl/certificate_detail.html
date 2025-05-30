@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}SSL Certificate Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">SSL Certificate Details</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'core:DashboardView' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'core:ssl-certificate-list' %}">SSL Certificates</a></li>
+        <li class="breadcrumb-item active">Certificate Details</li>
+    </ol>
+    
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-certificate me-1"></i> Certificate Information</span>
+                    <div>
+                        <a href="{% url 'core:check-ssl-certificate' certificate.hyperlink.pk %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-sync-alt me-1"></i> Refresh
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5 class="mb-1">URL</h5>
+                        <p class="mb-0">
+                            <a href="{{ certificate.hyperlink.url }}" target="_blank" rel="noopener noreferrer">
+                                {{ certificate.hyperlink.url }}
+                                <i class="fas fa-external-link-alt ms-1 small"></i>
+                            </a>
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">Status</h5>
+                        <p class="mb-0">
+                            <span class="badge bg-{{ certificate.status_color }}">
+                                {{ certificate.status }}
+                                {% if certificate.days_to_expiry is not None and certificate.days_to_expiry >= 0 %}
+                                    ({{ certificate.days_to_expiry }} days remaining)
+                                {% elif certificate.days_to_expiry is not None %}
+                                    (Expired {{ certificate.days_to_expiry|abs }} days ago)
+                                {% endif %}
+                            </span>
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">Expiry Date</h5>
+                        <p class="mb-0">{{ certificate.expiry_date|date:"F j, Y, g:i a" }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">Last Checked</h5>
+                        <p class="mb-0">{{ certificate.last_checked|date:"F j, Y, g:i a" }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">Notification Status</h5>
+                        <p class="mb-0">
+                            {% if certificate.notification_status == 'pending' %}
+                                <span class="badge bg-info">Pending</span>
+                            {% elif certificate.notification_status == 'notified' %}
+                                <span class="badge bg-success">Notified</span>
+                            {% elif certificate.notification_status == 'expired' %}
+                                <span class="badge bg-danger">Expired</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-server me-1"></i> Server Information
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5 class="mb-1">Server</h5>
+                        <p class="mb-0">
+                            <a href="{% url 'core:server-detail' certificate.hyperlink.servers.pk %}">
+                                {{ certificate.hyperlink.servers.name }}
+                            </a>
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">IP Address</h5>
+                        <p class="mb-0">{{ certificate.hyperlink.servers.ip_address }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">Department</h5>
+                        <p class="mb-0">{{ certificate.hyperlink.servers.department.name }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">Owner</h5>
+                        <p class="mb-0">
+                            {% if certificate.hyperlink.servers.owner %}
+                                {{ certificate.hyperlink.servers.owner.get_full_name }}
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-shield-alt me-1"></i> Certificate Details
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5 class="mb-1">Issuer</h5>
+                        <p class="mb-0 text-break">{{ certificate.issuer|default:"Not available" }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">Subject</h5>
+                        <p class="mb-0 text-break">{{ certificate.subject|default:"Not available" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mb-4">
+        <a href="{% url 'core:ssl-certificate-list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Certificates
+        </a>
+        <a href="{% url 'core:server-urls-detail' certificate.hyperlink.pk %}" class="btn btn-info">
+            <i class="fas fa-link me-1"></i> View URL Details
+        </a>
+    </div>
+</div>
+{% endblock %}

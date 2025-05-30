@@ -1,0 +1,22 @@
+SSL Certificate Expiry Notification
+===============================
+
+Hello,
+
+This is an automated notification to inform you that an SSL certificate for a URL associated with your server is about to expire.
+
+WARNING: The SSL certificate for {{ url }} will expire in {{ days }} days (on {{ expiry_date|date:"F j, Y" }}).
+
+Details:
+- Server: {{ server_name }}
+- URL: {{ url }}
+- Expiry Date: {{ expiry_date|date:"F j, Y" }}
+- Certificate Issuer: {{ issuer }}
+
+Please take appropriate action to renew this SSL certificate before it expires to avoid service disruptions and security warnings for users.
+
+Thank you,
+Server Management System
+
+---
+This is an automated message from your Server Management System. Please do not reply to this email.

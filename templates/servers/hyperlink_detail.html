@@ -1,45 +1,164 @@
 {% extends 'base.html' %}
 
+{% block title %}URL Details{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
+<div class="container-fluid px-4">
+    <h1 class="mt-4">URL Details</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'core:DashboardView' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'core:server-urls-list' %}">URLs</a></li>
+        <li class="breadcrumb-item active">URL Details</li>
+    </ol>
+    
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-link me-1"></i> URL Information
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5 class="mb-1">URL</h5>
+                        <p class="mb-0">
+                            <a href="{{ hyperlink.url }}" target="_blank" rel="noopener noreferrer">
+                                {{ hyperlink.url }}
+                                <i class="fas fa-external-link-alt ms-1 small"></i>
+                            </a>
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">Status</h5>
+                        <p class="mb-0">
+                            {% if hyperlink.is_enabled %}
+                                <span class="badge bg-success">Enabled</span>
+                            {% else %}
+                                <span class="badge bg-danger">Disabled</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">Created By</h5>
+                        <p class="mb-0">{{ hyperlink.created_by.get_full_name }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">Created At</h5>
+                        <p class="mb-0">{{ hyperlink.created_at|date:"F j, Y, g:i a" }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SSL Certificate Information -->
+            {% if hyperlink.ssl_certificate %}
+            <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3>URL Details</h3>
+                    <span><i class="fas fa-certificate me-1"></i> SSL Certificate</span>
                     <div>
-                        <a href="{% url 'core:server-urls-update' hyperlink.id %}" class="btn btn-sm btn-primary">Edit</a>
-                        <a href="{% url 'core:server-urls-delete' hyperlink.id %}" class="btn btn-sm btn-danger">Delete</a>
+                        <a href="{% url 'core:check-ssl-certificate' hyperlink.pk %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-sync-alt me-1"></i> Refresh
+                        </a>
                     </div>
                 </div>
                 <div class="card-body">
-                    <table class="table">
-                        <tr>
-                            <th>Server:</th>
-                            <td><a href="{% url 'core:server-detail' hyperlink.servers.id %}">{{ hyperlink.servers.name }}</a></td>
-                        </tr>
-                        <tr>
-                            <th>URL:</th>
-                            <td><a href="{{ hyperlink.url }}" target="_blank">{{ hyperlink.url }}</a></td>
-                        </tr>
-                        <tr>
-                            <th>Status:</th>
-                            <td>
-                                {% if hyperlink.is_enabled %}
-                                <span class="badge bg-success">Enabled</span>
-                                {% else %}
-                                <span class="badge bg-danger">Disabled</span>
+                    <div class="mb-3">
+                        <h5 class="mb-1">Status</h5>
+                        <p class="mb-0">
+                            <span class="badge bg-{{ hyperlink.ssl_certificate.status_color }}">
+                                {{ hyperlink.ssl_certificate.status }}
+                                {% if hyperlink.ssl_certificate.days_to_expiry is not None and hyperlink.ssl_certificate.days_to_expiry >= 0 %}
+                                    ({{ hyperlink.ssl_certificate.days_to_expiry }} days remaining)
+                                {% elif hyperlink.ssl_certificate.days_to_expiry is not None %}
+                                    (Expired {{ hyperlink.ssl_certificate.days_to_expiry|abs }} days ago)
                                 {% endif %}
-                            </td>
-                        </tr>
-                    </table>
+                            </span>
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">Expiry Date</h5>
+                        <p class="mb-0">{{ hyperlink.ssl_certificate.expiry_date|date:"F j, Y, g:i a"|default:"Not available" }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">Last Checked</h5>
+                        <p class="mb-0">{{ hyperlink.ssl_certificate.last_checked|date:"F j, Y, g:i a" }}</p>
+                    </div>
                     
                     <div class="mt-3">
-                        <a href="{% url 'core:server-detail' hyperlink.servers.id %}" class="btn btn-secondary">Back to Server</a>
+                        <a href="{% url 'core:ssl-certificate-detail' hyperlink.ssl_certificate.pk %}" class="btn btn-info">
+                            <i class="fas fa-info-circle me-1"></i> View Certificate Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-certificate me-1"></i> SSL Certificate
+                </div>
+                <div class="card-body">
+                    <p>No SSL certificate information available.</p>
+                    <a href="{% url 'core:check-ssl-certificate' hyperlink.pk %}" class="btn btn-primary">
+                        <i class="fas fa-shield-alt me-1"></i> Check SSL Certificate
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-server me-1"></i> Server Information
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5 class="mb-1">Server</h5>
+                        <p class="mb-0">
+                            <a href="{% url 'core:server-detail' hyperlink.servers.pk %}">
+                                {{ hyperlink.servers.name }}
+                            </a>
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">IP Address</h5>
+                        <p class="mb-0">{{ hyperlink.servers.ip_address }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">Department</h5>
+                        <p class="mb-0">{{ hyperlink.servers.department.name }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h5 class="mb-1">Owner</h5>
+                        <p class="mb-0">
+                            {% if hyperlink.servers.owner %}
+                                {{ hyperlink.servers.owner.get_full_name }}
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+    
+    <div class="mb-4">
+        <a href="{% url 'core:server-urls-list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to URLs
+        </a>
+        <a href="{% url 'core:server-urls-update' hyperlink.pk %}" class="btn btn-primary">
+            <i class="fas fa-edit me-1"></i> Edit
+        </a>
+        <a href="{% url 'core:server-urls-delete' hyperlink.pk %}" class="btn btn-danger">
+            <i class="fas fa-trash-alt me-1"></i> Delete
+        </a>
     </div>
 </div>
 {% endblock %}

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>SSL Certificate Expiry Notification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-bottom: 3px solid #dc3545;
+            margin-bottom: 20px;
+        }
+        .content {
+            padding: 15px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #6c757d;
+            text-align: center;
+        }
+        .warning {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .details {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>SSL Certificate Expiry Notification</h2>
+    </div>
+    
+    <div class="content">
+        <p>Hello,</p>
+        
+        <p>This is an automated notification to inform you that an SSL certificate for a URL associated with your server is about to expire.</p>
+        
+        <p class="warning">The SSL certificate for {{ url }} will expire in {{ days }} days (on {{ expiry_date|date:"F j, Y" }}).</p>
+        
+        <div class="details">
+            <p><strong>Server:</strong> {{ server_name }}</p>
+            <p><strong>URL:</strong> {{ url }}</p>
+            <p><strong>Expiry Date:</strong> {{ expiry_date|date:"F j, Y" }}</p>
+            <p><strong>Certificate Issuer:</strong> {{ issuer }}</p>
+        </div>
+        
+        <p>Please take appropriate action to renew this SSL certificate before it expires to avoid service disruptions and security warnings for users.</p>
+        
+        <p>Thank you,<br>
+        Server Management System</p>
+    </div>
+    
+    <div class="footer">
+        <p>This is an automated message from your Server Management System. Please do not reply to this email.</p>
+    </div>
+</body>
+</html>
