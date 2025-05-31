@@ -102,7 +102,8 @@ class AdminUserEditForm(forms.ModelForm):
             # Update user's role
             if self.cleaned_data['role']:
                 # Remove from all role groups first
-                user.groups.filter(name__in=['Admin', 'Manager', 'Viewer']).delete()
+                role_groups = user.groups.filter(name__in=['Admin', 'Manager', 'Viewer'])
+                user.groups.remove(*role_groups)
                 # Add to the selected role group
                 group = Group.objects.get(name=self.cleaned_data['role'])
                 user.groups.add(group)

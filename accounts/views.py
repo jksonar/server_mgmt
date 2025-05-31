@@ -66,7 +66,7 @@ class DepartmentCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Department
     template_name = 'accounts/department_form.html'
     fields = ['name']
-    success_url = reverse_lazy('department-list')
+    success_url = reverse_lazy('accounts:department-list')
     
     def test_func(self):
         return self.request.user.is_superuser
@@ -75,7 +75,7 @@ class DepartmentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Department
     template_name = 'accounts/department_form.html'
     fields = ['name']
-    success_url = reverse_lazy('department-list')
+    success_url = reverse_lazy('accounts:department-list')
     
     def test_func(self):
         return self.request.user.is_superuser
@@ -83,7 +83,7 @@ class DepartmentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 class DepartmentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Department
     template_name = 'accounts/department_confirm_delete.html'
-    success_url = reverse_lazy('department-list')
+    success_url = reverse_lazy('accounts:department-list')
     
     def test_func(self):
         return self.request.user.is_superuser

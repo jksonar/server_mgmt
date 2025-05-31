@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'crispy_forms',
+    'crispy_bootstrap5',
+    'widget_tweaks',
     'accounts',
     'django_celery_beat',
     'django_celery_results',
@@ -168,3 +171,7 @@ DEFAULT_FROM_EMAIL = 'Server Management <noreply@servermgmt.example.com>'
 
 # SSL Certificate settings
 SSL_NOTIFICATION_DAYS = [30, 14, 7, 3, 1]  # Days before expiry to send notifications
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = ["bootstrap5"]
+
+CRISPY_TEMPLATE_PACK = "bootstrap5"
