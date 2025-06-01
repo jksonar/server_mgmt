@@ -39,11 +39,14 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         # Only admins can update users
         return self.request.user.is_superuser or self.request.user.is_admin()
     
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
+    
     def form_valid(self, form):
         # Ensure we don't change the current user's session
         current_user = self.request.user
-        # Attach the request to the form for use in save method
-        form.request = self.request
         response = super().form_valid(form)
         # If the form submission somehow affected the current user's session,
         # restore it to the original user

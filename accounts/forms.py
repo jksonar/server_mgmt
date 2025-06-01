@@ -85,6 +85,7 @@ class AdminUserEditForm(forms.ModelForm):
         fields = ['username', 'email', 'first_name', 'last_name', 'is_active', 'departments', 'role']
     
     def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
         # Set initial role based on user's groups
         if self.instance.pk:
@@ -103,9 +104,10 @@ class AdminUserEditForm(forms.ModelForm):
             current_user_id = None
             try:
                 from django.contrib import auth
-                current_user_id = auth.get_user(self.request).id if hasattr(self, 'request') else None
-            except:
-                pass
+                if hasattr(self, 'request') and self.request:
+                    current_user_id = auth.get_user(self.request).id
+            except Exception as e:
+                print(f"Error getting current user: {e}")
                 
             user.save()
             # Update user's role
