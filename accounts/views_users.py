@@ -18,7 +18,7 @@ class UserListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 class UserCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = User
     form_class = AdminUserCreationForm
-    template_name = 'accounts/user_form.html'
+    template_name = 'accounts/user_add.html'
     success_url = reverse_lazy('accounts:user-list')
     
     def test_func(self):
@@ -32,7 +32,7 @@ class UserCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = User
     form_class = AdminUserEditForm
-    template_name = 'accounts/user_form.html'
+    template_name = 'accounts/user_edit.html'
     success_url = reverse_lazy('accounts:user-list')
     
     def test_func(self):
@@ -40,8 +40,18 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return self.request.user.is_superuser or self.request.user.is_admin()
     
     def form_valid(self, form):
+        # Ensure we don't change the current user's session
+        current_user = self.request.user
+        # Attach the request to the form for use in save method
+        form.request = self.request
+        response = super().form_valid(form)
+        # If the form submission somehow affected the current user's session,
+        # restore it to the original user
+        if self.request.user != current_user:
+            from django.contrib.auth import login
+            login(self.request, current_user)
         messages.success(self.request, 'User updated successfully!')
-        return super().form_valid(form)
+        return response
 
 class UserDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = User

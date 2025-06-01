@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import Server, ServerUpdate, Service, AuditLog, HyperLink, SSLCertificate, Host, VirtualMachine
-# Register your models here.
+
+# Register all models
 admin.site.register(Server)
 admin.site.register(ServerUpdate)
 admin.site.register(Service)

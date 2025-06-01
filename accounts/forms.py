@@ -98,15 +98,31 @@ class AdminUserEditForm(forms.ModelForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         if commit:
+            # Store the current user before saving
+            from django.contrib.auth import get_user_model
+            current_user_id = None
+            try:
+                from django.contrib import auth
+                current_user_id = auth.get_user(self.request).id if hasattr(self, 'request') else None
+            except:
+                pass
+                
             user.save()
             # Update user's role
             if self.cleaned_data['role']:
                 # Remove from all role groups first
                 role_groups = user.groups.filter(name__in=['Admin', 'Manager', 'Viewer'])
-                user.groups.remove(*role_groups)
+                # Directly iterate through the queryset to remove groups
+                for group in role_groups:
+                    user.groups.remove(group)
                 # Add to the selected role group
-                group = Group.objects.get(name=self.cleaned_data['role'])
-                user.groups.add(group)
+                try:
+                    group = Group.objects.get(name=self.cleaned_data['role'])
+                    user.groups.add(group)
+                except Group.DoesNotExist:
+                    # Create the group if it doesn't exist
+                    group = Group.objects.create(name=self.cleaned_data['role'])
+                    user.groups.add(group)
             # Update departments
             if 'departments' in self.cleaned_data:
                 user.departments.set(self.cleaned_data['departments'])
