@@ -17,33 +17,35 @@
             <h5 class="mb-0">Edit User: {{ form.instance.username }}</h5>
         </div>
         <div class="card-body">
+            <!-- Debug information -->
+            <div class="alert alert-info">
+                <p><strong>Form Fields:</strong> {{ form.fields.keys }}</p>
+                <p><strong>Form Errors:</strong> {{ form.errors }}</p>
+                <p><strong>Form is Bound:</strong> {{ form.is_bound }}</p>
+            </div>
+            
             <form method="post" novalidate>
                 {% csrf_token %}
                 
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5 class="mb-3">Basic Information</h5>
-                        {{ form.username|crispy }}
-                        {{ form.email|crispy }}
-                        {{ form.first_name|crispy }}
-                        {{ form.last_name|crispy }}
-                        {{ form.is_active|crispy }}
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <h5 class="mb-3">Role & Departments</h5>
-                        {{ form.role|crispy }}
-                        {{ form.departments|crispy }}
-                    </div>
-                </div>
+                <!-- Render the entire form using crispy -->
+                {{ form|crispy }}
                 
-                <div class="mt-4 text-end">
+                <div class="mt-4 d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Update User
+                        <i class="fas fa-save me-1"></i> Update User
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add any custom JavaScript for the form here
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Form loaded');
+    });
+</script>
 {% endblock %}

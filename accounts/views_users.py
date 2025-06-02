@@ -42,7 +42,14 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['request'] = self.request
+        print(f"Form kwargs: {kwargs}")
         return kwargs
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        print(f"Form fields: {form.fields.keys()}")
+        print(f"Form is bound: {form.is_bound}")
+        return form
     
     def form_valid(self, form):
         # Ensure we don't change the current user's session

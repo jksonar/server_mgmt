@@ -65,10 +65,26 @@ class AdminUserCreationForm(UserCreationForm):
         return user
 
 class AdminUserEditForm(forms.ModelForm):
+    username = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={'class': 'form-control'})
+    )
+    first_name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    last_name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    is_active = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
     departments = forms.ModelMultipleChoiceField(
         queryset=Department.objects.all(),
         required=False,
-        widget=forms.CheckboxSelectMultiple
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'})
     )
     role = forms.ChoiceField(
         choices=[
@@ -77,7 +93,8 @@ class AdminUserEditForm(forms.ModelForm):
             ('Manager', 'Manager - Edit/view assigned servers'),
             ('Viewer', 'Viewer - View-only access')
         ],
-        required=True
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-select'})
     )
     
     class Meta:
@@ -95,6 +112,10 @@ class AdminUserEditForm(forms.ModelForm):
                 self.fields['role'].initial = 'Manager'
             elif self.instance.is_viewer():
                 self.fields['role'].initial = 'Viewer'
+        
+        # Debug information
+        print(f"Form initialized with fields: {self.fields.keys()}")
+        print(f"Form instance: {self.instance}")
     
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -106,12 +127,14 @@ class AdminUserEditForm(forms.ModelForm):
                 from django.contrib import auth
                 if hasattr(self, 'request') and self.request:
                     current_user_id = auth.get_user(self.request).id
+                    print(f"Current user ID: {current_user_id}")
             except Exception as e:
                 print(f"Error getting current user: {e}")
                 
             user.save()
             # Update user's role
             if self.cleaned_data['role']:
+                print(f"Updating role to: {self.cleaned_data['role']}")
                 # Remove from all role groups first
                 role_groups = user.groups.filter(name__in=['Admin', 'Manager', 'Viewer'])
                 # Directly iterate through the queryset to remove groups
