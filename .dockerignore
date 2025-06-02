@@ -1,0 +1,34 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Django-specific
+*.sqlite3
+*.log
+
+# Environment
+.env
+
+# Static/media (only if built/collected locally)
+static/
+media/
+
+# Virtual environments
+venv/
+env/
+
+# IDE/editor/project files
+*.swp
+*.swo
+.idea/
+.vscode/
+*.iml
+
+# Git
+.git/
+.gitignore
+
+# Docker-specific
+Dockerfile
+docker-compose.yml
