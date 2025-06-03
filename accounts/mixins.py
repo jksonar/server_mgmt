@@ -3,23 +3,38 @@ from django.shortcuts import get_object_or_404
 from core.models import Server, Host, VirtualMachine, HyperLink, SSLCertificate
 
 class RoleBasedAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
-    """
+    """    
     A mixin that provides role-based access control for views.
     It checks if the user has the appropriate permissions based on their group membership.
     
-    - Admin: Full access to all servers
-    - Manager: Edit/view access to servers in their departments
-    - Viewer: View-only access to servers in their departments
+    - Admin: Full access to all features and modules
+    - Manager: Edit/view access to resources in their departments
+    - Viewer: View-only access to resources in their departments
     """
     
+    # List of allowed roles for the view
+    allowed_roles = ['admin', 'manager', 'viewer']
+    
     def test_func(self):
+        user = self.request.user
+        
         # Superusers always have access
-        if self.request.user.is_superuser:
+        if user.is_superuser:
             return True
             
-        # Check if user is in Admin group
-        if self.request.user.groups.filter(name='Admin').exists():
+        # Check if user is in Admin group - Admin has full access to everything
+        if user.is_admin():
             return True
+            
+        # Check if the user's role is allowed for this view
+        if not any(getattr(user, f'is_{role}')() for role in self.allowed_roles):
+            return False
+            
+        # For SSL Certificate views - Viewers have view-only access
+        if user.is_viewer() and (getattr(self, 'model', None) == SSLCertificate or 
+                                 self.__module__ == 'core.views_ssl'):
+            # Allow access only to DetailView and ListView for Viewers
+            return self.__class__.__name__.endswith(('DetailView', 'ListView'))
             
         # For object-specific views
         if hasattr(self, 'get_object'):
@@ -37,35 +52,36 @@ class RoleBasedAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
                 department = obj.servers.department
             elif isinstance(obj, SSLCertificate):
                 department = obj.hyperlink.servers.department
+                # Viewers have view-only access to SSL certificates
+                if user.is_viewer():
+                    # Allow access only to DetailView and ListView for Viewers
+                    return self.__class__.__name__.endswith(('DetailView', 'ListView'))
                 
             # Check if user's department matches the object's department
-            if department and department in self.request.user.departments.all():
+            if department and department in user.departments.all():
                 # Check if user is in Manager group and the action is allowed
-                if self.request.user.groups.filter(name='Manager').exists():
-                    # For create/update/delete views, check if the user has permission
-                    if self.__class__.__name__.endswith(('CreateView', 'UpdateView')):
-                        return True
-                    elif self.__class__.__name__.endswith('DeleteView'):
-                        # Managers cannot delete objects
-                        return False
-                    else:  # For detail/list views
-                        return True
+                if user.is_manager():
+                    # Managers can create, view, update, and delete objects in their departments
+                    return True
                         
                 # Check if user is in Viewer group and this is a read-only view
-                elif self.request.user.groups.filter(name='Viewer').exists():
+                elif user.is_viewer():
                     # Viewers can only access detail and list views
                     return self.__class__.__name__.endswith(('DetailView', 'ListView'))
+            else:
+                # User doesn't have access to this department
+                return False
         
         # For list views without a specific object
         elif self.__class__.__name__.endswith('ListView'):
             # Both Managers and Viewers can access list views
             # The queryset will be filtered by department in get_queryset
-            return self.request.user.groups.filter(name__in=['Manager', 'Viewer']).exists()
+            return user.is_manager() or user.is_viewer()
         
         # For create views without a specific object (e.g., adding a new server)
         elif self.__class__.__name__.endswith('CreateView'):
             # Only Admins and Managers can create new objects
-            return self.request.user.groups.filter(name='Manager').exists()
+            return user.is_manager()
             
         return False
 
@@ -74,21 +90,26 @@ class RoleBasedAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
         Filter the queryset based on the user's role and departments.
         """
         queryset = super().get_queryset()
+        user = self.request.user
         
         # Superusers and Admins can see all objects
-        if self.request.user.is_superuser or self.request.user.groups.filter(name='Admin').exists():
+        if user.is_superuser or user.is_admin():
             return queryset
+            
+        # Viewers have view-only access to SSL certificates in their departments
+        if user.is_viewer() and queryset.model == SSLCertificate:
+            return queryset.filter(hyperlink__servers__department__in=user.departments.all())
             
         # Filter objects by user's departments for Managers and Viewers
         model = queryset.model
         
         if model == Server or model == Host:
-            return queryset.filter(department__in=self.request.user.departments.all())
+            return queryset.filter(department__in=user.departments.all())
         elif model == VirtualMachine:
-            return queryset.filter(host__department__in=self.request.user.departments.all())
+            return queryset.filter(host__department__in=user.departments.all())
         elif model == HyperLink:
-            return queryset.filter(servers__department__in=self.request.user.departments.all())
+            return queryset.filter(servers__department__in=user.departments.all())
         elif model == SSLCertificate:
-            return queryset.filter(hyperlink__servers__department__in=self.request.user.departments.all())
+            return queryset.filter(hyperlink__servers__department__in=user.departments.all())
             
         return queryset

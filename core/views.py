@@ -8,13 +8,8 @@ from accounts.mixins import RoleBasedAccessMixin
 
 # 🔐 Mixin to filter servers by user department and role
 class ServerAccessMixin(RoleBasedAccessMixin):
-    def get_queryset(self):
-        user = self.request.user
-        # Superuser and Admin can see all servers
-        if user.is_superuser or user.is_admin():
-            return Server.objects.all()
-        # Manager and Viewer can only see servers in their departments
-        return Server.objects.filter(department__in=user.departments.all()).distinct()
+    model = Server
+    allowed_roles = ['admin', 'manager', 'viewer']  # All roles can access servers (with appropriate permissions)
 
 
 # 📊 Dashboard View (Optional)
@@ -24,36 +19,50 @@ class DashboardView(LoginRequiredMixin, ListView):
     context_object_name = "servers"
 
     def get_queryset(self):
-        if self.request.user.is_superuser:
+        user = self.request.user
+        # Superusers and Admins can see all servers
+        if user.is_superuser or user.is_admin():
             return Server.objects.all()
-        # Filter servers by user's departments
-        return Server.objects.filter(department__in=self.request.user.departments.all()).distinct()
+        # Managers and Viewers can only see servers in their departments
+        return Server.objects.filter(department__in=user.departments.all())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['updates_count'] = ServerUpdate.objects.count()
-        context['services_count'] = Service.objects.count()
+        user = self.request.user
+        
+        # Count updates and services based on user's access level
+        if user.is_superuser or user.is_admin():
+            context['updates_count'] = ServerUpdate.objects.count()
+            context['services_count'] = Service.objects.count()
+        else:
+            # Filter counts by user's departments
+            context['updates_count'] = ServerUpdate.objects.filter(
+                server__department__in=user.departments.all()
+            ).distinct().count()
+            context['services_count'] = Service.objects.filter(
+                server__department__in=user.departments.all()
+            ).distinct().count()
         return context
 
 
-# 🖥️ Server List
+# 📋 List all servers
 class ServerListView(ServerAccessMixin, ListView):
     model = Server
     template_name = "servers/server_list.html"
     context_object_name = "servers"
 
 
-# 🔍 Server Detail
+# 🔍 View server details
 class ServerDetailView(ServerAccessMixin, DetailView):
     model = Server
     template_name = "servers/server_detail.html"
     context_object_name = "server"
-
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['updates'] = self.object.updates.all()
         context['services'] = self.object.services.all()
-        context['hyperlinks'] = self.object.HyperLink.all()  # Add this line
+        context['hyperlinks'] = self.object.hyperlinks.all()
         return context
 
 
@@ -275,10 +284,50 @@ class ServiceDeleteView(RoleBasedAccessMixin, DeleteView):
             
         # Manager can only delete services on servers in their departments
         return user.is_manager() and service.server.department in user.departments.all()
-            
-            
-        return form
 
+
+# 📋 List all services
+class ServiceListView(RoleBasedAccessMixin, ListView):
+    model = Service
+    template_name = "servers/service_list.html"
+    context_object_name = "services"
+    allowed_roles = ['admin', 'manager', 'viewer']  # All roles can view services
+    
+    def get_queryset(self):
+        user = self.request.user
+        # Superuser and Admin can see all services
+        if user.is_superuser or user.is_admin():
+            return Service.objects.all()
+        # Manager and Viewer can only see services on servers in their departments
+        return Service.objects.filter(server__department__in=user.departments.all()).distinct()
+
+
+# 🔍 View service details
+class ServiceDetailView(RoleBasedAccessMixin, DetailView):
+    model = Service
+    template_name = "servers/service_detail.html"
+    context_object_name = "service"
+    allowed_roles = ['admin', 'manager', 'viewer']  # All roles can view service details
+
+
+# ➕ Add Service
+class ServiceCreateView(RoleBasedAccessMixin, CreateView):
+    model = Service
+    fields = ['name', 'port', 'server', 'status']
+    template_name = "servers/service_form.html"
+    success_url = reverse_lazy('core:server-list')
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can create services
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        user = self.request.user
+        # Limit server choices to user's accessible servers unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
+            form.fields['server'].queryset = Server.objects.filter(
+                department__in=user.departments.all()
+            ).distinct()
+        return form
+    
     def form_valid(self, form):
         user = self.request.user
         
@@ -290,17 +339,29 @@ class ServiceDeleteView(RoleBasedAccessMixin, DeleteView):
         return super().form_valid(form)
 
 
-class HyperLinkCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class HyperLinkCreateView(RoleBasedAccessMixin, CreateView):
     model = HyperLink
     fields = ['servers', 'url', 'is_enabled']
     template_name = "servers/hyperlink_form.html"
     success_url = reverse_lazy('core:server-list')
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can create URLs
     
     def test_func(self):
+        # First check the role-based access
+        if not super().test_func():
+            return False
+            
         # If server_id is in kwargs, check if user has access to this server
         if 'server_id' in self.kwargs:
             server = get_object_or_404(Server, id=self.kwargs['server_id'])
-            return self.request.user.is_superuser or server.department in self.request.user.departments.all()
+            user = self.request.user
+            
+            # Admin and superuser can access any server
+            if user.is_superuser or user.is_admin():
+                return True
+                
+            # Manager can only access servers in their departments
+            return server.department in user.departments.all()
         return True  # Will be filtered in get_form
     
     def get_form(self, form_class=None):
@@ -327,52 +388,32 @@ class HyperLinkCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         return super().form_valid(form)
 
 
-class HyperLinkDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+class HyperLinkDetailView(RoleBasedAccessMixin, DetailView):
     model = HyperLink
     template_name = "servers/hyperlink_detail.html"
     context_object_name = "hyperlink"
-    
-    def test_func(self):
-        hyperlink = self.get_object()
-        # Allow access if user is superuser or server's department is in user's departments
-        return self.request.user.is_superuser or hyperlink.servers.department in self.request.user.departments.all()
+    allowed_roles = ['admin', 'manager', 'viewer']  # All roles can view URLs
 
 
-class HyperLinkUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class HyperLinkUpdateView(RoleBasedAccessMixin, UpdateView):
     model = HyperLink
     fields = ['url', 'is_enabled']
     template_name = "servers/hyperlink_form.html"
     success_url = reverse_lazy('core:server-list')
-    
-    def test_func(self):
-        hyperlink = self.get_object()
-        # Allow access if user is superuser or server's department is in user's departments
-        return self.request.user.is_superuser or hyperlink.servers.department in self.request.user.departments.all()
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can edit URLs
 
 
-class HyperLinkDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class HyperLinkDeleteView(RoleBasedAccessMixin, DeleteView):
     model = HyperLink
     template_name = "servers/hyperlink_confirm_delete.html"
     success_url = reverse_lazy('core:server-list')
-    
-    def test_func(self):
-        hyperlink = self.get_object()
-        # Allow access if user is superuser or server's department is in user's departments
-        return self.request.user.is_superuser or hyperlink.servers.department in self.request.user.departments.all()
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can delete URLs
 
-class HyperLinkListView(LoginRequiredMixin, ListView):
+class HyperLinkListView(RoleBasedAccessMixin, ListView):
     model = HyperLink
     template_name = "servers/hyperlink_list.html"
     context_object_name = "hyperlinks"
-    
-    def get_queryset(self):
-        # Get all hyperlinks the user has access to
-        if self.request.user.is_superuser:
-            return HyperLink.objects.all()
-        # Filter hyperlinks by user's departments
-        return HyperLink.objects.filter(
-            servers__department__in=self.request.user.departments.all()
-        ).distinct()
+    allowed_roles = ['admin', 'manager', 'viewer']  # All roles can view URL list
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -388,14 +429,11 @@ class HyperLinkListView(LoginRequiredMixin, ListView):
         return context
 
 # 🔐 Mixin to filter hosts by user department
-class HostAccessMixin(LoginRequiredMixin):
-    def get_queryset(self):
-        if self.request.user.is_superuser:
-            return Host.objects.all()
-        # Filter hosts by user's departments
-        return Host.objects.filter(department__in=self.request.user.departments.all()).distinct()
+class HostAccessMixin(RoleBasedAccessMixin):
+    model = Host
+    allowed_roles = ['admin', 'manager', 'viewer']  # All roles can access hosts (with appropriate permissions)
 
-# 🖥️ Host List with VMs
+# 📋 List all hosts and VMs
 class HostVMListView(HostAccessMixin, ListView):
     model = Host
     template_name = "servers/host_vm_list.html"
@@ -420,70 +458,83 @@ class HostDetailView(HostAccessMixin, DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['virtual_machines'] = self.object.virtual_machines.all()
+        context['vms'] = self.object.virtual_machines.all()
         return context
 
 # ➕ Add Host
-class HostCreateView(LoginRequiredMixin, CreateView):
+class HostCreateView(RoleBasedAccessMixin, CreateView):
     model = Host
     form_class = HostForm
     template_name = "servers/host_form.html"
     success_url = reverse_lazy('core:host-vm-list')
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can create hosts
     
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        # Limit department choices to user's departments unless superuser
-        if not self.request.user.is_superuser:
-            form.fields['department'].queryset = self.request.user.departments.all()
+        user = self.request.user
+        # Limit department choices to user's departments unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
+            form.fields['department'].queryset = user.departments.all()
         return form
 
     def form_valid(self, form):
-        # Ensure user can only create hosts for their departments
-        if not self.request.user.is_superuser:
-            if form.instance.department not in self.request.user.departments.all():
+        user = self.request.user
+        # Ensure user can only create hosts for their departments unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
+            if form.instance.department not in user.departments.all():
                 form.add_error('department', 'You can only create hosts for your departments')
                 return self.form_invalid(form)
         return super().form_valid(form)
 
 # ✏️ Update Host
-class HostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class HostUpdateView(RoleBasedAccessMixin, UpdateView):
     model = Host
     form_class = HostForm
     template_name = "servers/host_form.html"
     success_url = reverse_lazy('core:host-vm-list')
-
-    def test_func(self):
-        # Allow access if user is superuser or host's department is in user's departments
-        host = self.get_object()
-        return self.request.user.is_superuser or host.department in self.request.user.departments.all()
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can update hosts
     
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        # Limit department choices to user's departments unless superuser
-        if not self.request.user.is_superuser:
-            form.fields['department'].queryset = self.request.user.departments.all()
+        user = self.request.user
+        # Limit department choices to user's departments unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
+            form.fields['department'].queryset = user.departments.all()
         return form
 
     def form_valid(self, form):
-        # Ensure user can only update hosts to their departments
-        if not self.request.user.is_superuser:
-            if form.instance.department not in self.request.user.departments.all():
+        user = self.request.user
+        # Ensure user can only update hosts to their departments unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
+            if form.instance.department not in user.departments.all():
                 form.add_error('department', 'You can only assign hosts to your departments')
                 return self.form_invalid(form)
         return super().form_valid(form)
 
 # ➕ Add VM
-class VMCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class VMCreateView(RoleBasedAccessMixin, CreateView):
     model = VirtualMachine
     form_class = VirtualMachineForm
     template_name = "servers/vm_form.html"
     success_url = reverse_lazy('core:host-vm-list')
-
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can create VMs
+    
     def test_func(self):
+        # First check the role-based access
+        if not super().test_func():
+            return False
+            
         # If host_id is in kwargs, check if user has access to this host
         if 'host_id' in self.kwargs:
             host = get_object_or_404(Host, id=self.kwargs['host_id'])
-            return self.request.user.is_superuser or host.department in self.request.user.departments.all()
+            user = self.request.user
+            
+            # Admin and superuser can access any host
+            if user.is_superuser or user.is_admin():
+                return True
+                
+            # Manager can only access hosts in their departments
+            return host.department in user.departments.all()
         return True  # Will be filtered in get_form
 
     def get_form(self, form_class=None):
@@ -517,41 +568,42 @@ class VMCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         return super().form_valid(form)
 
 # 🔍 VM Detail
-class VMDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+class VMDetailView(RoleBasedAccessMixin, DetailView):
     model = VirtualMachine
     template_name = "servers/vm_detail.html"
     context_object_name = "vm"
-    
-    def test_func(self):
-        vm = self.get_object()
-        # Allow access if user is superuser or host's department is in user's departments
-        return self.request.user.is_superuser or vm.host.department in self.request.user.departments.all()
+    allowed_roles = ['admin', 'manager', 'viewer']  # All roles can view VMs
 
 # ✏️ Update VM
-class VMUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class VMUpdateView(RoleBasedAccessMixin, UpdateView):
     model = VirtualMachine
     form_class = VirtualMachineForm
     template_name = "servers/vm_form.html"
     success_url = reverse_lazy('core:host-vm-list')
-
-    def test_func(self):
-        # Allow access if user is superuser or VM's host department is in user's departments
-        vm = self.get_object()
-        return self.request.user.is_superuser or vm.host.department in self.request.user.departments.all()
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can update VMs
     
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        # Limit host choices to user's accessible hosts
-        if not self.request.user.is_superuser:
+        user = self.request.user
+        # Limit host choices to user's accessible hosts unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
             form.fields['host'].queryset = Host.objects.filter(
-                department__in=self.request.user.departments.all()
+                department__in=user.departments.all()
             ).distinct()
         return form
 
     def form_valid(self, form):
-        # Double-check host access permission
-        if not self.request.user.is_superuser:
-            if form.instance.host.department not in self.request.user.departments.all():
+        user = self.request.user
+        # Double-check host access permission unless admin or superuser
+        if not (user.is_superuser or user.is_admin()):
+            if form.instance.host.department not in user.departments.all():
                 form.add_error('host', 'You can only assign VMs to hosts in your departments')
                 return self.form_invalid(form)
         return super().form_valid(form)
+
+# 🗑️ Delete VM
+class VMDeleteView(RoleBasedAccessMixin, DeleteView):
+    model = VirtualMachine
+    template_name = "servers/vm_confirm_delete.html"
+    success_url = reverse_lazy('core:host-vm-list')
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can delete VMs

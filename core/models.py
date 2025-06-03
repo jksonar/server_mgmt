@@ -53,7 +53,7 @@ class AuditLog(models.Model):
         return f"{self.timestamp} - {self.user} - {self.action}"
 
 class HyperLink(models.Model):
-    servers = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='HyperLink')
+    servers = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='hyperlinks')
     url = models.CharField(max_length=100)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='HyperLink_created_by')
     created_at = models.DateTimeField(auto_now_add=True)
