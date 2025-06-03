@@ -351,9 +351,12 @@ class HyperLinkCreateView(RoleBasedAccessMixin, CreateView):
         if not super().test_func():
             return False
             
-        # If server_id is in kwargs, check if user has access to this server
-        if 'server_id' in self.kwargs:
-            server = get_object_or_404(Server, id=self.kwargs['server_id'])
+        # Get server_id from kwargs or query parameters
+        server_id = self.kwargs.get('server_id') or self.request.GET.get('server_id')
+        
+        # If server_id exists, check if user has access to this server
+        if server_id:
+            server = get_object_or_404(Server, id=server_id)
             user = self.request.user
             
             # Admin and superuser can access any server
@@ -372,19 +375,31 @@ class HyperLinkCreateView(RoleBasedAccessMixin, CreateView):
                 department__in=self.request.user.departments.all()
             ).distinct()
         
-        # If server_id is in kwargs, pre-select the server
-        if 'server_id' in self.kwargs:
-            form.fields['servers'].initial = self.kwargs['server_id']
+        # Get server_id from kwargs or query parameters
+        server_id = self.kwargs.get('server_id') or self.request.GET.get('server_id')
+        
+        # If server_id exists, pre-select the server
+        if server_id:
+            form.fields['servers'].initial = server_id
             form.fields['servers'].widget.attrs['readonly'] = True
             
         return form
 
     def form_valid(self, form):
+        # Set the created_by field to the current user
+        form.instance.created_by = self.request.user
+        
         # Double-check server access permission
         if not self.request.user.is_superuser:
             if form.instance.servers.department not in self.request.user.departments.all():
                 form.add_error('servers', 'You can only add URLs to servers in your departments')
                 return self.form_invalid(form)
+        
+        # Get the server_id from the request to set success_url to return to server detail page
+        server_id = self.kwargs.get('server_id') or self.request.GET.get('server_id')
+        if server_id:
+            self.success_url = reverse_lazy('core:server-detail', kwargs={'pk': server_id})
+            
         return super().form_valid(form)
 
 
@@ -400,7 +415,11 @@ class HyperLinkUpdateView(RoleBasedAccessMixin, UpdateView):
     fields = ['url', 'is_enabled']
     template_name = "servers/hyperlink_form.html"
     success_url = reverse_lazy('core:server-list')
-    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can edit URLs
+    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can update URLs
+    
+    def get_success_url(self):
+        # Redirect back to the server detail page
+        return reverse_lazy('core:server-detail', kwargs={'pk': self.object.servers.id})
 
 
 class HyperLinkDeleteView(RoleBasedAccessMixin, DeleteView):
@@ -408,6 +427,12 @@ class HyperLinkDeleteView(RoleBasedAccessMixin, DeleteView):
     template_name = "servers/hyperlink_confirm_delete.html"
     success_url = reverse_lazy('core:server-list')
     allowed_roles = ['admin', 'manager']  # Only Admin and Manager can delete URLs
+    
+    def get_success_url(self):
+        # Store the server ID before deletion
+        server_id = self.object.servers.id
+        # Redirect back to the server detail page
+        return reverse_lazy('core:server-detail', kwargs={'pk': server_id})
 
 class HyperLinkListView(RoleBasedAccessMixin, ListView):
     model = HyperLink
