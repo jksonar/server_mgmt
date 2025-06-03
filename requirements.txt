@@ -24,6 +24,7 @@ django_celery_results==2.6.0
 idna==3.10
 kombu==5.5.3
 prompt_toolkit==3.0.51
+psycopg2-binary==2.9.10
 pycparser==2.22
 pyOpenSSL==25.1.0
 python-crontab==3.2.0

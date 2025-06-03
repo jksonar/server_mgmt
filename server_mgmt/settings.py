@@ -192,3 +192,5 @@ SSL_NOTIFICATION_DAYS = [30, 14, 7, 3, 1]  # Days before expiry to send notifica
 CRISPY_ALLOWED_TEMPLATE_PACKS = ["bootstrap5"]
 
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+STATICFILES_DIRS = [BASE_DIR / "static"]
