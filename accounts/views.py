@@ -88,3 +88,9 @@ class DepartmentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         return self.request.user.is_superuser
 
+def custom_permission_denied(request, exception=None):
+    """
+    Custom view for handling 403 (Permission Denied) errors with a user-friendly message.
+    """
+    return render(request, '403.html', status=403)
+

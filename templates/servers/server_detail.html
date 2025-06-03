@@ -178,7 +178,7 @@
             <a href="{% url 'core:server-urls' %}?server_id={{ server.id }}" class="btn btn-sm btn-primary">Add URL</a>
         </div>
         <div class="card-body">
-            {% if server.HyperLink.all %}
+            {% if server.hyperlinks.all %}
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
@@ -189,7 +189,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for hyperlink in server.HyperLink.all %}
+                        {% for hyperlink in server.hyperlinks.all %}
                         <tr>
                             <td><a href="{{ hyperlink.url }}" target="_blank">{{ hyperlink.url }}</a></td>
                             <td>
