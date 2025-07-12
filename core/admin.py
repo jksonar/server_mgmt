@@ -1,11 +1,11 @@
 from django.contrib import admin
-from .models import Server, ServerUpdate, Service, AuditLog, HyperLink, SSLCertificate, Host, VirtualMachine
+from .models import Server, ServerUpdate, Service, HyperLink, SSLCertificate, Host, VirtualMachine
 
 # Register all models
 admin.site.register(Server)
 admin.site.register(ServerUpdate)
 admin.site.register(Service)
-admin.site.register(AuditLog)
+
 
 @admin.register(HyperLink)
 class HyperLinkAdmin(admin.ModelAdmin):
