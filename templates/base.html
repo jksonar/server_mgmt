@@ -144,6 +144,9 @@
                     <a href="{% url 'core:server-urls' %}" class="list-group-item list-group-item-action" data-bs-toggle="tooltip" title="Add a new server URL">
                         <i class="fas fa-plus-circle me-2"></i> Add Server URL
                     </a>
+                    <a href="{% url 'core:audit-log' %}" class="list-group-item list-group-item-action" data-bs-toggle="tooltip" title="View audit log">
+                        <i class="fas fa-history me-2"></i> Audit Log
+                    </a>
                     {% endif %}
                     <a href="{% url 'core:server-urls-list' %}" class="list-group-item list-group-item-action" data-bs-toggle="tooltip" title="View all server URLs">
                         <i class="fas fa-link me-2"></i> All URLs

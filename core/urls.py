@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import views_ssl
+from . import views_audit
 
 app_name = 'core'
 
@@ -37,4 +38,5 @@ urlpatterns = [
     path('ssl/check/<int:pk>/', views_ssl.CheckSSLCertificateView.as_view(), name='check-ssl-certificate'),
     path('ssl/run-check/', views_ssl.RunSSLCheckView.as_view(), name='run-ssl-check'),
     path('ssl/api/check/', views_ssl.SSLCertificateAPIView.as_view(), name='ssl-api-check'),
+    path('audit-log/', views_audit.audit_log_view, name='audit-log'),
 ]

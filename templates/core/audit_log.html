@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Audit Log</h1>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>User</th>
+                <th>Model</th>
+                <th>Object</th>
+                <th>Action</th>
+                <th>Changes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in log_entries %}
+            <tr>
+                <td>{{ entry.timestamp|date:"Y-m-d H:i:s" }}</td>
+                <td>{{ entry.actor }}</td>
+                <td>{{ entry.content_type }}</td>
+                <td>{{ entry.object_repr }}</td>
+                <td>{{ entry.get_action_display }}</td>
+                <td>
+                    <ul>
+                        {% for key, value in entry.changes_dict.items %}
+                            <li><strong>{{ key }}:</strong> {{ value.0 }} -> {{ value.1 }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

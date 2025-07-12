@@ -140,7 +140,3 @@ class SSLCertificate(models.Model):
         else:
             return "secondary"
 
-# Register models with auditlog
-auditlog.register(Server)
-auditlog.register(Host)
-auditlog.register(VirtualMachine)
