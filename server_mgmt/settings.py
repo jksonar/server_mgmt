@@ -56,7 +56,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'auditlog.middleware.AuditlogMiddleware',
+    'core.middleware.AuditLogMiddleware',
 ]
 
 ROOT_URLCONF = 'server_mgmt.urls'
@@ -162,9 +162,9 @@ os.makedirs(os.path.join(BASE_DIR, '.celery/broker/in'), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, '.celery/broker/out'), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, '.celery/broker/processed'), exist_ok=True)
 
-# Import Celery Beat schedule
-from core.celery_beat_schedule import BEAT_SCHEDULE
-CELERY_BEAT_SCHEDULE = BEAT_SCHEDULE
+# Celery Beat schedule
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development

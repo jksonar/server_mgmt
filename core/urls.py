@@ -38,5 +38,7 @@ urlpatterns = [
     path('ssl/check/<int:pk>/', views_ssl.CheckSSLCertificateView.as_view(), name='check-ssl-certificate'),
     path('ssl/run-check/', views_ssl.RunSSLCheckView.as_view(), name='run-ssl-check'),
     path('ssl/api/check/', views_ssl.SSLCertificateAPIView.as_view(), name='ssl-api-check'),
-    path('audit-log/', views_audit.audit_log_view, name='audit-log'),
+    # Audit Log URLs
+    path('audit-logs/', views_audit.AuditLogListView.as_view(), name='audit-log-list'),
+    path('audit-logs/export/', views_audit.export_audit_logs_csv, name='audit-log-export'),
 ]
