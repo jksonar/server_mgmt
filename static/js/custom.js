@@ -55,6 +55,9 @@ function initializeUI() {
     
     // Add accessibility enhancements
     enhanceAccessibility();
+
+    // Handle sidebar toggle on mobile
+    initSidebarToggle();
 }
 
 // ===== TOOLTIPS =====
@@ -352,6 +355,18 @@ function updateStatusIndicators() {
             }
         }
     });
+}
+
+// ===== SIDEBAR TOGGLE ======
+function initSidebarToggle() {
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarToggler = document.querySelector('#sidebar-toggler');
+
+    if (sidebar && sidebarToggler) {
+        sidebarToggler.addEventListener('click', function() {
+            sidebar.classList.toggle('d-none');
+        });
+    }
 }
 
 // ===== ACCESSIBILITY ENHANCEMENTS =====
