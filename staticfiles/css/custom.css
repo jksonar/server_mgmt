@@ -1,5 +1,44 @@
 /* Server Management - Custom CSS for UI/UX Enhancement */
 
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+    --accent-color: #e74c3c;
+    --background-color: #ecf0f1;
+    --text-color: #34495e;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.navbar {
+    background-color: #f8f9fa !important;
+}
+
+.sidebar {
+    background-color: #f8f9fa;
+    border-right: 1px solid #ddd;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+
 /* ===== DYNAMIC ELEMENTS ===== */
 
 /* Responsive buttons, menus, modals */

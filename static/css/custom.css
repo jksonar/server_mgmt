@@ -15,11 +15,11 @@ body {
 }
 
 .navbar {
-    background-color: var(--secondary-color) !important;
+    background-color: #f8f9fa !important;
 }
 
 .sidebar {
-    background-color: #fff;
+    background-color: #f8f9fa;
     border-right: 1px solid #ddd;
 }
 
