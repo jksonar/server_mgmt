@@ -47,17 +47,17 @@ class AdminUserCreationForm(UserCreationForm):
         required=True
     )
     
-    class Meta:
+    class Meta(UserCreationForm.Meta):
         model = User
-        fields = ['username', 'email', 'first_name', 'last_name', 'password1', 'password2', 'departments', 'role']
-    
+        fields = ('username', 'first_name', 'last_name', 'email', 'departments', 'role')
+
     def save(self, commit=True):
         user = super().save(commit=False)
         if commit:
             user.save()
             # Add user to the selected role group
             if self.cleaned_data['role']:
-                group = Group.objects.get(name=self.cleaned_data['role'])
+                group, created = Group.objects.get_or_create(name=self.cleaned_data['role'])
                 user.groups.add(group)
             # Add user to departments
             if self.cleaned_data['departments']:
