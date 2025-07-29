@@ -310,33 +310,7 @@ class ServiceDetailView(RoleBasedAccessMixin, DetailView):
     allowed_roles = ['admin', 'manager', 'viewer']  # All roles can view service details
 
 
-# ➕ Add Service
-class ServiceCreateView(RoleBasedAccessMixin, CreateView):
-    model = Service
-    fields = ['name', 'port', 'server', 'status']
-    template_name = "servers/service_form.html"
-    success_url = reverse_lazy('core:server-list')
-    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can create services
-    
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        user = self.request.user
-        # Limit server choices to user's accessible servers unless admin or superuser
-        if not (user.is_superuser or user.is_admin()):
-            form.fields['server'].queryset = Server.objects.filter(
-                department__in=user.departments.all()
-            ).distinct()
-        return form
-    
-    def form_valid(self, form):
-        user = self.request.user
-        
-        # Double-check server access permission unless admin or superuser
-        if not (user.is_superuser or user.is_admin()):
-            if form.instance.server.department not in user.departments.all():
-                form.add_error('server', 'You can only add services to servers in your departments')
-                return self.form_invalid(form)
-        return super().form_valid(form)
+
 
 
 class HyperLinkCreateView(RoleBasedAccessMixin, CreateView):

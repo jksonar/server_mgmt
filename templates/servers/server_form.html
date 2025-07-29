@@ -76,16 +76,16 @@
                         <div class="mb-3">
                             <label for="id_owner" class="form-label">Owner</label>
                             {{ form.owner.errors }}
-                            {{ form.owner }}
+                            <select name="owner" id="id_owner" class="form-select {% if form.owner.errors %}is-invalid{% endif %}">
+                                <option value="" {% if not form.owner.value %}selected{% endif %}>---------</option>
+                                {% for user in form.owner.field.queryset %}
+                                    <option value="{{ user.id }}" {% if form.owner.value|stringformat:'i' == user.id|stringformat:'i' %}selected{% endif %}>
+                                        {{ user }}
+                                    </option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label for="id_groups" class="form-label">Access Groups</label>
-                            {{ form.groups.errors }}
-                            {{ form.groups }}
-                            <div class="form-text">Users in these groups can view this server</div>
-                        </div>
-                        
+                                                
                         <div class="d-flex justify-content-between">
                             <a href="{% url 'core:server-list' %}" class="btn btn-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">Save</button>
