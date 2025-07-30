@@ -12,21 +12,29 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
+
+# reading .env file
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-yv!h0svrl8(=9&sl#*@4gn@al(df4g7ln$&k579h@7ayz9#*s!'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
 
 # Application definition
@@ -66,7 +74,7 @@ ROOT_URLCONF = 'server_mgmt.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [ os.path.join(BASE_DIR, 'templates') ], 
+        'DIRS': [ os.path.join(BASE_DIR, 'templates') ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -85,10 +93,7 @@ WSGI_APPLICATION = 'server_mgmt.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': env.db(),
 }
 
 
@@ -170,13 +175,15 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 
 # Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
-EMAIL_HOST = 'smtp.example.com'  # Change in production
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your-email@example.com'  # Change in production
-EMAIL_HOST_PASSWORD = 'your-password'  # Change in production
-DEFAULT_FROM_EMAIL = 'Server Management <noreply@servermgmt.example.com>'
+EMAIL_BACKEND = env('EMAIL_BACKEND')
+EMAIL_HOST = env('EMAIL_HOST', default='')
+email_port_str = env('EMAIL_PORT', default='587')
+EMAIL_PORT = int(email_port_str) if email_port_str else 587
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Server Management <noreply@servermgmt.example.com>')
+
 
 # SSL Certificate settings
 SSL_NOTIFICATION_DAYS = [30, 14, 7, 3, 1]  # Days before expiry to send notifications
@@ -184,3 +191,18 @@ SSL_NOTIFICATION_DAYS = [30, 14, 7, 3, 1]  # Days before expiry to send notifica
 CRISPY_ALLOWED_TEMPLATE_PACKS = ["bootstrap5"]
 
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+ENVIRONMENT = env('ENVIRONMENT')
+
+if ENVIRONMENT == 'prod':
+    # Production settings
+    # Add any production specific settings here
+    pass
+elif ENVIRONMENT == 'dev':
+    # Development settings
+    # Add any development specific settings here
+    pass
+else:
+    # Local settings
+    # Add any local specific settings here
+    pass

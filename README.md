@@ -48,19 +48,41 @@ This is a Django-based server management application designed to help you track 
     pip install -r requirements.txt
     ```
 
-4.  **Run the database migrations:**
+4.  **Environment Configuration:**
+
+    This project uses `.env` files for environment-specific configuration. There are three environments available: `local`, `dev`, and `prod`.
+
+    *   **.env.example:** An example file with all the required environment variables.
+    *   **.env:** Used for local development. Copy `.env.example` to `.env` and fill in the values.
+    *   **.env.dev:** Used for the development server.
+    *   **.env.prod:** Used for the production server.
+
+    To use a specific environment, you can set the `ENVIRONMENT` variable in your shell, or the application will default to the `.env` file. For example, to run the development server with the `dev` environment settings, you would run:
+
+    ```bash
+    ENVIRONMENT=dev python manage.py runserver
+    ```
+
+    Or you can create a `.env` file from the example:
+    ```bash
+    cp .env.example .env
+    ```
+    And then update the variables in the `.env` file.
+
+
+5.  **Run the database migrations:**
 
     ```bash
     python manage.py migrate
     ```
 
-5.  **Create a superuser:**
+6.  **Create a superuser:**
 
     ```bash
     python manage.py createsuperuser
     ```
 
-6.  **Run the development server:**
+7.  **Run the development server:**
 
     ```bash
     python manage.py runserver
