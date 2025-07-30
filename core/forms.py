@@ -4,7 +4,7 @@ from .models import Server, ServerUpdate, Service, HyperLink, Host, VirtualMachi
 class ServerForm(forms.ModelForm):
     class Meta:
         model = Server
-        fields = ['name', 'ip_address', 'os', 'cpu', 'memory', 'disk', 'location', 'department']
+        fields = ['name', 'ip_address', 'os', 'cpu_cores', 'server_type', 'server_kind', 'cpu', 'memory', 'disk', 'location', 'department']
 
 class ServerUpdateForm(forms.ModelForm):
     class Meta:

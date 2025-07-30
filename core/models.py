@@ -5,9 +5,22 @@ from datetime import datetime, timedelta
 from auditlog.registry import auditlog
 
 class Server(models.Model):
+    SERVER_TYPE_CHOICES = [
+        ('production', 'Production'),
+        ('dev', 'Development'),
+        ('local', 'Local'),
+    ]
+    SERVER_KIND_CHOICES = [
+        ('vm', 'Virtual Machine'),
+        ('bare-metal', 'Bare Metal'),
+    ]
+
     name = models.CharField(max_length=100)
     ip_address = models.GenericIPAddressField()
     os = models.CharField(max_length=100)
+    cpu_cores = models.PositiveIntegerField(blank=True, null=True)
+    server_type = models.CharField(max_length=20, choices=SERVER_TYPE_CHOICES, default='dev')
+    server_kind = models.CharField(max_length=20, choices=SERVER_KIND_CHOICES, default='vm')
     cpu = models.CharField(max_length=100, blank=True)
     memory = models.CharField(max_length=50, blank=True)
     disk = models.CharField(max_length=100, blank=True)

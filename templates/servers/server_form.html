@@ -34,6 +34,32 @@
                         
                         <div class="row">
                             <div class="col-md-4 mb-3">
+                                <label for="id_cpu_cores" class="form-label">CPU Cores</label>
+                                {{ form.cpu_cores.errors }}
+                                <input type="number" name="cpu_cores" id="id_cpu_cores" class="form-control {% if form.cpu_cores.errors %}is-invalid{% endif %}" value="{{ form.cpu_cores.value|default:'' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="id_server_type" class="form-label">Server Type</label>
+                                {{ form.server_type.errors }}
+                                <select name="server_type" id="id_server_type" class="form-select {% if form.server_type.errors %}is-invalid{% endif %}">
+                                    {% for value, display in form.server_type.field.choices %}
+                                        <option value="{{ value }}" {% if form.server_type.value == value %}selected{% endif %}>{{ display }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="id_server_kind" class="form-label">Server Kind</label>
+                                {{ form.server_kind.errors }}
+                                <select name="server_kind" id="id_server_kind" class="form-select {% if form.server_kind.errors %}is-invalid{% endif %}">
+                                    {% for value, display in form.server_kind.field.choices %}
+                                        <option value="{{ value }}" {% if form.server_kind.value == value %}selected{% endif %}>{{ display }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
                                 <label for="id_cpu" class="form-label">CPU</label>
                                 {{ form.cpu.errors }}
                                 <input type="text" name="cpu" id="id_cpu" class="form-control {% if form.cpu.errors %}is-invalid{% endif %}" value="{{ form.cpu.value|default:'' }}">

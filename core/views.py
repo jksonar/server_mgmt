@@ -77,7 +77,7 @@ class ServerDetailView(ServerAccessMixin, DetailView):
 # ➕ Add Server (Admin and Managers)
 class ServerCreateView(RoleBasedAccessMixin, CreateView):
     model = Server
-    fields = ['name', 'ip_address', 'os', 'cpu', 'memory', 'disk', 'location', 'department', 'owner']
+    fields = ['name', 'ip_address', 'os', 'cpu_cores', 'server_type', 'server_kind', 'cpu', 'memory', 'disk', 'location', 'department', 'owner']
     template_name = "servers/server_form.html"
     success_url = reverse_lazy('core:server-list')
     allowed_roles = ['admin', 'manager']  # Only Admin and Manager can create servers
@@ -102,7 +102,7 @@ class ServerCreateView(RoleBasedAccessMixin, CreateView):
 # ✏️ Update Server (Admin and Managers)
 class ServerUpdateView(RoleBasedAccessMixin, UpdateView):
     model = Server
-    fields = ['name', 'ip_address', 'os', 'cpu', 'memory', 'disk', 'location', 'department', 'owner']
+    fields = ['name', 'ip_address', 'os', 'cpu_cores', 'server_type', 'server_kind', 'cpu', 'memory', 'disk', 'location', 'department', 'owner']
     template_name = "servers/server_form.html"
     success_url = reverse_lazy('core:server-list')
     allowed_roles = ['admin', 'manager']  # Only Admin and Manager can update servers
