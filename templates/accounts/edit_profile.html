@@ -35,9 +35,9 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label for="id_department" class="form-label">Department</label>
-                            {{ form.department.errors }}
-                            <input type="text" name="department" id="id_department" class="form-control {% if form.department.errors %}is-invalid{% endif %}" value="{{ form.department.value|default:'' }}">
+                            <label for="id_departments" class="form-label">Departments</label>
+                            {{ form.departments.errors }}
+                            {{ form.departments }}
                         </div>
                         
                         <div class="d-flex justify-content-between">

@@ -50,6 +50,14 @@ class ServerListView(ServerAccessMixin, ListView):
     model = Server
     template_name = "servers/server_list.html"
     context_object_name = "servers"
+    
+    def get_queryset(self):
+        user = self.request.user
+        # Superusers and Admins can see all servers
+        if user.is_superuser or user.is_admin():
+            return Server.objects.all()
+        # Managers and Viewers can only see servers in their departments
+        return Server.objects.filter(department__in=user.departments.all()).distinct()
 
 
 # 🔍 View server details
@@ -100,18 +108,9 @@ class ServerUpdateView(RoleBasedAccessMixin, UpdateView):
     allowed_roles = ['admin', 'manager']  # Only Admin and Manager can update servers
 
     def test_func(self):
-        user = self.request.user
-        server = self.get_object()
-        
-        # Admin and superuser can update any server
-        if user.is_superuser or user.is_admin():
-            return True
-            
-        # Manager can only update servers in their departments
-        if user.is_manager() and server.department in user.departments.all():
-            return True
-            
-        return False
+        # The RoleBasedAccessMixin now handles the core role and department checks.
+        # We only need to ensure the user has the allowed role.
+        return super().test_func()
     
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -140,19 +139,14 @@ class ServerUpdateCreateView(RoleBasedAccessMixin, CreateView):
     allowed_roles = ['admin', 'manager']  # Only Admin and Manager can add update entries
 
     def test_func(self):
-        user = self.request.user
-        
-        # Admin and superuser can update any server
-        if user.is_superuser or user.is_admin():
-            return True
-            
-        # If server_id is in kwargs, check if user has access to this server
+        # The RoleBasedAccessMixin now handles the core role and department checks.
+        # We only need to ensure the user has the allowed role.
+        # For creation, we also need to check if a server_id is provided in kwargs
+        # and if the user has access to that specific server.
         if 'server_id' in self.kwargs:
             server = get_object_or_404(Server, id=self.kwargs['server_id'])
-            # Manager can only update servers in their departments
-            return user.is_manager() and server.department in user.departments.all()
-            
-        return user.is_manager()  # Will be filtered in get_form
+            self.object = server  # Set object for RoleBasedAccessMixin to check department
+        return super().test_func()
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -191,19 +185,14 @@ class ServiceCreateView(RoleBasedAccessMixin, CreateView):
     success_url = reverse_lazy('core:server-list')
 
     def test_func(self):
-        user = self.request.user
-        
-        # Admin and superuser can add services to any server
-        if user.is_superuser or user.is_admin():
-            return True
-            
-        # If server_id is in kwargs, check if user has access to this server
+        # The RoleBasedAccessMixin now handles the core role and department checks.
+        # We only need to ensure the user has the allowed role.
+        # For creation, we also need to check if a server_id is provided in kwargs
+        # and if the user has access to that specific server.
         if 'server_id' in self.kwargs:
             server = get_object_or_404(Server, id=self.kwargs['server_id'])
-            # Manager can only add services to servers in their departments
-            return user.is_manager() and server.department in user.departments.all()
-            
-        return user.is_manager()  # Will be filtered in get_form
+            self.object = server  # Set object for RoleBasedAccessMixin to check department
+        return super().test_func()
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -243,15 +232,9 @@ class ServiceUpdateView(RoleBasedAccessMixin, UpdateView):
         return reverse_lazy('core:server-detail', kwargs={'pk': self.object.server.pk})
     
     def test_func(self):
-        user = self.request.user
-        service = self.get_object()
-        
-        # Admin and superuser can edit any service
-        if user.is_superuser or user.is_admin():
-            return True
-            
-        # Manager can only edit services on servers in their departments
-        return user.is_manager() and service.server.department in user.departments.all()
+        # The RoleBasedAccessMixin now handles the core role and department checks.
+        # We only need to ensure the user has the allowed role.
+        return super().test_func()
     
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -275,15 +258,9 @@ class ServiceDeleteView(RoleBasedAccessMixin, DeleteView):
         return reverse_lazy('core:server-detail', kwargs={'pk': self.object.server.pk})
     
     def test_func(self):
-        user = self.request.user
-        service = self.get_object()
-        
-        # Admin and superuser can delete any service
-        if user.is_superuser or user.is_admin():
-            return True
-            
-        # Manager can only delete services on servers in their departments
-        return user.is_manager() and service.server.department in user.departments.all()
+        # The RoleBasedAccessMixin now handles the core role and department checks.
+        # We only need to ensure the user has the allowed role.
+        return super().test_func()
 
 
 # 📋 List all services
@@ -310,33 +287,7 @@ class ServiceDetailView(RoleBasedAccessMixin, DetailView):
     allowed_roles = ['admin', 'manager', 'viewer']  # All roles can view service details
 
 
-# ➕ Add Service
-class ServiceCreateView(RoleBasedAccessMixin, CreateView):
-    model = Service
-    fields = ['name', 'port', 'server', 'status']
-    template_name = "servers/service_form.html"
-    success_url = reverse_lazy('core:server-list')
-    allowed_roles = ['admin', 'manager']  # Only Admin and Manager can create services
-    
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        user = self.request.user
-        # Limit server choices to user's accessible servers unless admin or superuser
-        if not (user.is_superuser or user.is_admin()):
-            form.fields['server'].queryset = Server.objects.filter(
-                department__in=user.departments.all()
-            ).distinct()
-        return form
-    
-    def form_valid(self, form):
-        user = self.request.user
-        
-        # Double-check server access permission unless admin or superuser
-        if not (user.is_superuser or user.is_admin()):
-            if form.instance.server.department not in user.departments.all():
-                form.add_error('server', 'You can only add services to servers in your departments')
-                return self.form_invalid(form)
-        return super().form_valid(form)
+
 
 
 class HyperLinkCreateView(RoleBasedAccessMixin, CreateView):
@@ -347,25 +298,14 @@ class HyperLinkCreateView(RoleBasedAccessMixin, CreateView):
     allowed_roles = ['admin', 'manager']  # Only Admin and Manager can create URLs
     
     def test_func(self):
-        # First check the role-based access
-        if not super().test_func():
-            return False
-            
-        # Get server_id from kwargs or query parameters
-        server_id = self.kwargs.get('server_id') or self.request.GET.get('server_id')
-        
-        # If server_id exists, check if user has access to this server
-        if server_id:
-            server = get_object_or_404(Server, id=server_id)
-            user = self.request.user
-            
-            # Admin and superuser can access any server
-            if user.is_superuser or user.is_admin():
-                return True
-                
-            # Manager can only access servers in their departments
-            return server.department in user.departments.all()
-        return True  # Will be filtered in get_form
+        # The RoleBasedAccessMixin now handles the core role and department checks.
+        # We only need to ensure the user has the allowed role.
+        # For creation, we also need to check if a server_id is provided in kwargs
+        # and if the user has access to that specific server.
+        if 'server_id' in self.kwargs:
+            server = get_object_or_404(Server, id=self.kwargs['server_id'])
+            self.object = server  # Set object for RoleBasedAccessMixin to check department
+        return super().test_func()
     
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -440,6 +380,14 @@ class HyperLinkListView(RoleBasedAccessMixin, ListView):
     context_object_name = "hyperlinks"
     allowed_roles = ['admin', 'manager', 'viewer']  # All roles can view URL list
     
+    def get_queryset(self):
+        user = self.request.user
+        # Superusers and Admins can see all hyperlinks
+        if user.is_superuser or user.is_admin():
+            return HyperLink.objects.all()
+        # Managers and Viewers can only see hyperlinks for servers in their departments
+        return HyperLink.objects.filter(servers__department__in=user.departments.all()).distinct()
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Group hyperlinks by server
@@ -463,6 +411,14 @@ class HostVMListView(HostAccessMixin, ListView):
     model = Host
     template_name = "servers/host_vm_list.html"
     context_object_name = "hosts"
+    
+    def get_queryset(self):
+        user = self.request.user
+        # Superusers and Admins can see all hosts
+        if user.is_superuser or user.is_admin():
+            return Host.objects.all()
+        # Managers and Viewers can only see hosts in their departments
+        return Host.objects.filter(department__in=user.departments.all()).distinct()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -545,22 +501,14 @@ class VMCreateView(RoleBasedAccessMixin, CreateView):
     allowed_roles = ['admin', 'manager']  # Only Admin and Manager can create VMs
     
     def test_func(self):
-        # First check the role-based access
-        if not super().test_func():
-            return False
-            
-        # If host_id is in kwargs, check if user has access to this host
+        # The RoleBasedAccessMixin now handles the core role and department checks.
+        # We only need to ensure the user has the allowed role.
+        # For creation, we also need to check if a host_id is provided in kwargs
+        # and if the user has access to that specific host.
         if 'host_id' in self.kwargs:
             host = get_object_or_404(Host, id=self.kwargs['host_id'])
-            user = self.request.user
-            
-            # Admin and superuser can access any host
-            if user.is_superuser or user.is_admin():
-                return True
-                
-            # Manager can only access hosts in their departments
-            return host.department in user.departments.all()
-        return True  # Will be filtered in get_form
+            self.object = host  # Set object for RoleBasedAccessMixin to check department
+        return super().test_func()
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)

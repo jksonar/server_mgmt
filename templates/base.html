@@ -15,7 +15,6 @@
     <style>
         .sidebar {
             min-height: calc(100vh - 56px);
-            background-color: #f8f9fa;
             transition: all 0.3s ease;
         }
         .content {
@@ -31,8 +30,15 @@
 <body>
     <!-- Skip to content link for accessibility -->
     <a href="#content" class="skip-link">Skip to content</a>
+
+    {% if request.user_is_impersonating %}
+    <div class="alert alert-warning text-center mb-0">
+        You are currently impersonating <strong>{{ request.user.username }}</strong>.
+        <a href="{% url 'accounts:stop-impersonating' %}" class="btn btn-sm btn-danger ms-2">Stop Impersonating</a>
+    </div>
+    {% endif %}
     
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'core:DashboardView' %}">
                 <i class="fas fa-server me-2"></i>Server Management
