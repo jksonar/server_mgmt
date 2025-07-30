@@ -20,4 +20,6 @@ urlpatterns = [
     path('users/add/', views_users.UserCreateView.as_view(), name='user-create'),
     path('users/<int:pk>/', views_users.UserDetailView.as_view(), name='user-detail'),
     path('users/<int:pk>/edit/', views_users.UserUpdateView.as_view(), name='user-update'),
+    path('impersonate/<int:user_id>/', views.impersonate_user, name='impersonate-user'),
+    path('impersonate/stop/', views.stop_impersonating, name='stop-impersonating'),
 ]

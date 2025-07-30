@@ -23,10 +23,16 @@ class CustomerProfileForm(forms.ModelForm):
         required=False,
         widget=forms.CheckboxSelectMultiple
     )
-    
+
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email', 'departments']
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super(CustomerProfileForm, self).__init__(*args, **kwargs)
+        if user and not user.is_admin():
+            self.fields['departments'].disabled = True
 
 class AdminUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)

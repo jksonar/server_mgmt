@@ -45,17 +45,6 @@ class SSLCertificateDetailView(RoleBasedAccessMixin, DetailView):
     template_name = "ssl/certificate_detail.html"
     context_object_name = "certificate"
     allowed_roles = ['admin', 'manager', 'viewer']  # All roles can view certificate details
-    
-    def test_func(self):
-        user = self.request.user
-        certificate = self.get_object()
-        
-        # Admin and superuser can view any certificate
-        if user.is_superuser or user.is_admin():
-            return True
-            
-        # Manager and Viewer can only view certificates in their departments
-        return certificate.hyperlink.servers.department in user.departments.all()
 
 class CheckSSLCertificateView(RoleBasedAccessMixin, View):
     """
@@ -64,16 +53,9 @@ class CheckSSLCertificateView(RoleBasedAccessMixin, View):
     allowed_roles = ['admin', 'manager']  # Only Admin and Manager can check SSL certificates
     
     def test_func(self):
-        user = self.request.user
         hyperlink_id = self.kwargs.get('pk')
-        hyperlink = get_object_or_404(HyperLink, pk=hyperlink_id)
-        
-        # Admin and superuser can check any certificate
-        if user.is_superuser or user.is_admin():
-            return True
-            
-        # Manager can only check certificates in their departments
-        return user.is_manager() and hyperlink.servers.department in user.departments.all()
+        self.object = get_object_or_404(HyperLink, pk=hyperlink_id) # Set object for RoleBasedAccessMixin to check department
+        return super().test_func()
     
     def get(self, request, *args, **kwargs):
         hyperlink_id = self.kwargs.get('pk')
@@ -117,8 +99,9 @@ class RunSSLCheckView(RoleBasedAccessMixin, View):
     allowed_roles = ['admin']  # Only Admin can run SSL certificate check task
     
     def test_func(self):
-        # Only superusers and admins can run this task manually
-        return self.request.user.is_superuser or self.request.user.is_admin()
+        # The RoleBasedAccessMixin now handles the core role and department checks.
+        # We only need to ensure the user has the allowed role.
+        return super().test_func()
     
     def get(self, request, *args, **kwargs):
         try:
