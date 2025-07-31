@@ -23,7 +23,14 @@ env = environ.Env(
 )
 
 # reading .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+DJANGO_ENV = os.environ.get('DJANGO_ENV', 'local')
+env_file = os.path.join(BASE_DIR, f'.env.{DJANGO_ENV}')
+
+# Fallback to .env if the specific one doesn't exist
+if not os.path.exists(env_file):
+    env_file = os.path.join(BASE_DIR, '.env')
+
+environ.Env.read_env(env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -92,9 +99,24 @@ WSGI_APPLICATION = 'server_mgmt.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': env.db(),
-}
+if env('ENVIRONMENT', default='local') == 'prod':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': env.list('PG_DB'), 
+            'USER': env.list('PG_USER'),
+            'PASSWORD': env.list('PG_PASSWD'),
+            'HOST': env.list('PG_HOST'), 
+            'PORT': env.list('PG_POST'),
+    }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -192,17 +214,4 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = ["bootstrap5"]
 
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-ENVIRONMENT = env('ENVIRONMENT')
 
-if ENVIRONMENT == 'prod':
-    # Production settings
-    # Add any production specific settings here
-    pass
-elif ENVIRONMENT == 'dev':
-    # Development settings
-    # Add any development specific settings here
-    pass
-else:
-    # Local settings
-    # Add any local specific settings here
-    pass

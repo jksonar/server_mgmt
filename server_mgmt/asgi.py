@@ -9,6 +9,9 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
 
 import os
 
+# Set the DJANGO_ENV environment variable. Default to 'prod' for ASGI.
+os.environ.setdefault('DJANGO_ENV', 'prod')
+
 from django.core.asgi import get_asgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'server_mgmt.settings')
