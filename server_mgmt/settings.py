@@ -30,7 +30,7 @@ env_file = os.path.join(BASE_DIR, f'.env.{DJANGO_ENV}')
 if not os.path.exists(env_file):
     env_file = os.path.join(BASE_DIR, '.env')
 
-environ.Env.read_env(env_file)
+env.read_env(env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -99,24 +99,9 @@ WSGI_APPLICATION = 'server_mgmt.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if env('ENVIRONMENT', default='local') == 'prod':
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': env.list('PG_DB'), 
-            'USER': env.list('PG_USER'),
-            'PASSWORD': env.list('PG_PASSWD'),
-            'HOST': env.list('PG_HOST'), 
-            'PORT': env.list('PG_POST'),
-    }
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+DATABASES = {
+    'default': env.db()
+}
 
 
 # Password validation
