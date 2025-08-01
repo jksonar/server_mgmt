@@ -32,7 +32,7 @@ This is a Django-based server management application designed to help you track 
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/your-username/server-mgmt.git
+    git clone https://github.com/jksonar/server_mgmt.git
     ```
 
 2.  **Create a virtual environment and activate it:**
@@ -57,10 +57,10 @@ This is a Django-based server management application designed to help you track 
     *   **.env.dev:** Used for the development server.
     *   **.env.prod:** Used for the production server.
 
-    To use a specific environment, you can set the `ENVIRONMENT` variable in your shell, or the application will default to the `.env` file. For example, to run the development server with the `dev` environment settings, you would run:
+    To use a specific environment, you can set the `DJANGO_ENV` variable in your shell, or the application will default to the `.env` file. For example, to run the development server with the `dev` environment settings, you would run:
 
     ```bash
-    ENVIRONMENT=dev python manage.py runserver
+    DJANGO_ENV='dev' python manage.py runserver
     ```
 
     Or you can create a `.env` file from the example:
