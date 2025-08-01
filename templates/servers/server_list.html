@@ -121,7 +121,12 @@
                     <tbody>
                         {% for server in servers %}
                         <tr class="server-row">
-                            <td><strong>{{ server.name }}</strong></td>
+                            <td>
+                                <strong>{{ server.name }}</strong>
+                                {% if server.server_type == 'production' %}
+                                    <span class="badge bg-success ms-2">Production</span>
+                                {% endif %}
+                            </td>
                             <td>{{ server.ip_address }}</td>
                             <td>{{ server.os }}</td>
                             <td>{{ server.location }}</td>
