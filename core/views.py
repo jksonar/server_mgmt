@@ -1,4 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.paginator import Paginator
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
@@ -50,6 +51,7 @@ class ServerListView(ServerAccessMixin, ListView):
     model = Server
     template_name = "servers/server_list.html"
     context_object_name = "servers"
+    paginate_by = 10
     
     def get_queryset(self):
         user = self.request.user
