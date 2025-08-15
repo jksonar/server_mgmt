@@ -52,7 +52,18 @@ class ServerListView(ServerAccessMixin, ListView):
     template_name = "servers/server_list.html"
     context_object_name = "servers"
     paginate_by = 10
-    
+
+    def get_paginate_by(self, queryset):
+        # Get the paginate_by value from the query parameters.
+        paginate_by_str = self.request.GET.get('paginate_by')
+
+        # If a valid value is provided, update the session.
+        if paginate_by_str and paginate_by_str in ['10', '25', '50', '100']:
+            self.request.session['paginate_by'] = int(paginate_by_str)
+
+        # Return the value from the session, or the default.
+        return self.request.session.get('paginate_by', self.paginate_by)
+
     def get_queryset(self):
         user = self.request.user
         # Superusers and Admins can see all servers
